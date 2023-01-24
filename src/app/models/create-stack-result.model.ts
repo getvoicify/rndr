@@ -16,7 +16,7 @@ export const isPendingResult = (result: CreateStackResultModel): result is Creat
 }
 
 export const isCompleteResult = (result: CreateStackResultModel): result is CreateStackResultModel => {
-  return typeof result.stackStatus === 'string' && result.stackStatus === 'Done';
+  return result.stackStatus === 'Done';
 }
 
 export const isProcessingResult = (result: CreateStackResultModel): result is CreateStackResultModel => {

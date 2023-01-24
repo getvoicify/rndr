@@ -12,14 +12,14 @@ export const appRoutes: Routes = [
     loadComponent: () => import('./missing-vars/missing-vars.component').then((m) => m.MissingVarsComponent),
   },
   {
+    path: 'stacks',
+    loadChildren: () => import('./stacks/stacks-routing.module').then((m) => m.StacksRoutingModule),
+  },
+  {
     path: '',
     loadComponent: () => import('./home/home.component').then((m) => m.HomeComponent),
     canActivate: [hasDepsGuard, hasExtDepsGuard, hasAwsEnvGuard],
     children: [
-      {
-        path: 'stacks',
-        loadChildren: () => import('./stacks/stacks-routing.module').then((m) => m.StacksRoutingModule),
-      },
       {
         path: 'settings',
         loadChildren: () => import('./settings/settings-routing.module').then((m) => m.SettingsRoutingModule),
