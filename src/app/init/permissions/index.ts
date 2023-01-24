@@ -1,0 +1,1 @@
+export { notificationPermissionInitializerProvider as initNotification } from './notification.permission';

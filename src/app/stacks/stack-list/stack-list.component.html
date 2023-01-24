@@ -1,0 +1,18 @@
+<ng-container *ngIf="!state.hasStacks" [ngTemplateOutlet]="noStack"></ng-container>
+{{ state.processing }}
+
+<ng-template #noStack>
+  <div class="flex flex-col w-full">
+    <h1>Create a stack</h1>
+    <p>To start render jobs, you need to create a stack.</p>
+
+    <div class="flex flex-col m-4 gap-4 w-2/3">
+      <input type="text" placeholder="Stack name" #input>
+      <button [disabled]="isCreatingStack" (click)="createStack(input.value)" class="btn btn-blue">
+        <ng-container *ngIf="!isCreatingStack">Create</ng-container>
+        <ng-container *ngIf="isCreatingStack">Creating</ng-container>
+      </button>
+    </div>
+  </div>
+</ng-template>
+

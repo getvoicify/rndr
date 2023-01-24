@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+body {
+  width: 100vw;
+  height: 100vh;
+}
+
+.title {
+  @apply font-bold text-2xl select-none mb-2;
+}
+
+form > fieldset {
+  @apply flex flex-col gap-1 mb-2;
+}
+
+form > fieldset > label {
+  @apply font-bold text-sm;
+}
+
+.btn {
+  @apply font-bold py-2 px-4 rounded;
+}
+.btn-blue {
+  @apply bg-blue-500 text-white;
+}
+.btn-blue:hover {
+  @apply bg-blue-700;
+}
