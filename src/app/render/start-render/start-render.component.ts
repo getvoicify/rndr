@@ -1,12 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  HostBinding,
-  importProvidersFrom,
-  Inject,
-  inject, TemplateRef,
-  ViewChild
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostBinding, Inject, inject, TemplateRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { CreateRenderConfig, isErrorRenderEvent, isLoadRenderEvent } from '../../models/render';
@@ -17,6 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { SNACKBAR_SERVICE_TOKEN, SnackbarService } from '../../base/services';
 import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-start-render',
@@ -27,8 +20,10 @@ import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dial
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StartRenderComponent extends ReactiveComponent {
+
+  @ViewChild('fileInput', { static: true }) fileInput!: HTMLInputElement;
   @HostBinding('class') classes = 'flex flex-col items-center justify-center h-full';
-  private file?: File;
+  file?: File;
 
   state = this.connect({
     loading: this.renderService.createRenderEvent$.pipe(
@@ -45,7 +40,8 @@ export class StartRenderComponent extends ReactiveComponent {
   constructor(
     private renderService: RenderService,
     @Inject(SNACKBAR_SERVICE_TOKEN) private snackService: SnackbarService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private router: Router,
     ) {
     super();
   }
@@ -74,6 +70,8 @@ export class StartRenderComponent extends ReactiveComponent {
     }
     const config: CreateRenderConfig = this.configFormGroup.value as CreateRenderConfig;
     this.renderService.createRender(this.file, config);
+    this.configFormGroup.reset();
+    this.router.navigate(['/jobs']).catch(console.error);
   }
 
   showAdvancedSettings() {
