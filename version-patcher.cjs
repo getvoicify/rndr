@@ -1,10 +1,26 @@
 const config = require('./src-tauri/tauri.conf.json');
+const package = require('./package.json');
 const path = require('path');
 const fs = require('fs');
 
-const [version] = process.argv.slice(2);
+const { version } = package;
 
-console.log('Patching version', version);
+const isLowerThanBaseVersion = (version, baseVersion) => {
+    const versionArr = version.split('.');
+    const baseVersionArr = baseVersion.split('.');
+    for (let i = 0; i < versionArr.length; i++) {
+        if (parseInt(versionArr[i]) < parseInt(baseVersionArr[i])) {
+            return true;
+        }
+    }
+    return false;
+}
+const currentVersion = config.package.version;
+
+if (isLowerThanBaseVersion(version, currentVersion)) {
+    throw new Error('Version lower than current version');
+}
+
 const newConfig = {
     ...config,
     package: {
