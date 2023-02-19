@@ -4,7 +4,7 @@
 )]
 
 use tauri::Manager;
-use blender_batch_render_helper::{os_fn, process, aws};
+use blender_batch_render_helper::{os_fn, process, aws, jobs};
 use blender_batch_render_helper::env_mod;
 
 fn main() {
@@ -13,18 +13,25 @@ fn main() {
             let path = app.path_resolver().app_data_dir().unwrap();
             let path = path.join(".config").join(".env");
             let path = path.to_str().unwrap();
-            env_mod::bootstrap_env(path);
+            env_mod::run_bootstrap(path, app);
 
             let app_dir = app.path_resolver().app_data_dir().unwrap();
             let app_dir = app_dir.to_str().unwrap();
-            os_fn::create_blender_folder(&app_dir);
-
+            let blender_path = format!("{}/.config/.blender", &app_dir);
+            let deps_path = format!("{}/.brh-ext-deps", app_dir);
+            os_fn::create_blender_folder(&blender_path);
+            os_fn::create_blender_folder(&deps_path);
+            os_fn::clone_git_project(&deps_path);
             os_fn::init_job_list(app);
             #[cfg(debug_assertions)] // only include this code on debug builds
             {
-                let window = app.get_window("main").unwrap();
-                window.open_devtools();
-                window.close_devtools();
+                match app.get_window("main") {
+                    Some(window) => {
+                        window.open_devtools();
+                        window.close_devtools();
+                    }
+                    None => {}
+                };
             }
 
             Ok(())
@@ -36,6 +43,9 @@ fn main() {
             os_fn::check_os_feature,
             os_fn::create_blender_file,
             os_fn::has_stack,
+            os_fn::open_url,
+            os_fn::open_folder_beginning_with_string,
+            jobs::parse_csv,
             process::process_render,
             process::start_render,
             env_mod::check_env_var,

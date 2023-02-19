@@ -22,9 +22,11 @@
             "name": "git-clone",
             "cmd": "git",
             "args": [
-              "clone", {
+              "clone",
+              {
                 "validator": "\\S+"
-              }, {
+              },
+              {
                 "validator": "\\S+"
               }
             ]
@@ -32,7 +34,12 @@
           {
             "name": "run-git-status",
             "cmd": "git",
-            "args": ["status", { "validator": "\\S+" }]
+            "args": [
+              "status",
+              {
+                "validator": "\\S+"
+              }
+            ]
           }
         ]
       },
@@ -54,6 +61,9 @@
         ]
       },
       "path": {
+        "all": true
+      },
+      "process": {
         "all": true
       }
     },

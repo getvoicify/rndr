@@ -1,8 +1,8 @@
 use std::process::Command;
-use std::env;
+use std::{env, fs};
 use std::fs::File;
-use std::path::Path;
-use tauri::{App, Wry};
+use std::path::{Path, PathBuf};
+use tauri::{App, command, Wry};
 
 fn check_file_exists(file: &str) -> bool {
     let path = Path::new(file);
@@ -141,23 +141,112 @@ pub fn create_blender_file(file_path: &str) -> Result<(), ()> {
     }
 }
 
+
+fn create_folder(path: &str) -> bool {
+    match Command::new("mkdir")
+        .arg(path)
+        .output() {
+        Ok(output) => {
+            println!("output: {:?}", output);
+            true
+        },
+        Err(error) => {
+            println!("error: {:?}", error);
+            false
+        },
+    }
+}
+
 #[tauri::command]
-pub fn create_blender_folder(home_path: &str) -> bool {
-    let path = format!("{}/.config/.blender", home_path);
+pub fn create_blender_folder(path: &str) -> bool {
     if !check_file_exists(&path) {
-        match Command::new("mkdir")
-            .arg(&path)
-            .output() {
-            Ok(output) => {
-                println!("output: {:?}", output);
-                true
-            },
-            Err(error) => {
-                println!("error: {:?}", error);
-                false
-            },
-        }
+        create_folder(&path)
     } else {
         true
     }
+}
+
+#[tauri::command]
+pub fn open_url(url: &str) {
+    println!("open_url: {:?}", url);
+    let os_name = env::consts::OS;
+    let mut cmd = match os_name {
+        "windows" => {
+            let mut command = Command::new("cmd");
+            command.args(&["/C", "start", url]);
+            command
+        },
+        "linux" => {
+            let mut command = Command::new("sh");
+            command.arg("-c").arg(format!("xdg-open {}", url));
+            command
+        },
+        "macos" => {
+            let mut command = Command::new("sh");
+            command.arg("-c").arg(format!("open {}", url));
+            command
+        },
+        _ => return println!("Error: Unable to determine operating system"),
+    };
+
+    match cmd.spawn() {
+        Ok(_) => println!("Opened {} in the default browser", url),
+        Err(e) => println!("Error opening {}: {}", url, e),
+    }
+}
+
+#[tauri::command]
+pub fn open_folder_beginning_with_string(home_path: &str, folder_name_prefix: &str) {
+    let paths = match fs::read_dir(home_path) {
+        Ok(paths) => paths,
+        Err(error) => {
+            println!("error: {:?}", error);
+            return;
+        },
+    };
+
+    for path in paths {
+        let path = path.unwrap().path();
+        if path.is_dir() && path.file_name().unwrap().to_str().unwrap().starts_with(folder_name_prefix) {
+            #[cfg(target_os = "windows")]
+            {
+                let mut explorer = "explorer".to_owned();
+                explorer.push_str(&format!(" {}", path.display()));
+                std::process::Command::new("cmd")
+                    .arg("/C")
+                    .arg(explorer)
+                    .spawn()
+                    .expect("failed to start explorer");
+            }
+            #[cfg(target_os = "macos")]
+            {
+                let path_buf = PathBuf::from(&path);
+                std::process::Command::new("open")
+                    .arg("-R")
+                    .arg(path_buf)
+                    .spawn()
+                    .expect("failed to start finder");
+            }
+            #[cfg(target_os = "linux")]
+            {
+                let path_buf = PathBuf::from(&path);
+                std::process::Command::new("xdg-open")
+                    .arg(path_buf)
+                    .spawn()
+                    .expect("failed to start file explorer");
+            }
+            return;
+        }
+    }
+    println!("No folder found that begins with the given prefix: {}", folder_name_prefix);
+}
+
+#[tauri::command]
+pub fn clone_git_project(path: &str) {
+    let repo = "https://github.com/petetaxi-test/AwsBatchBlender";
+    let mut command = Command::new("git");
+    command.arg("clone");
+    command.arg(repo);
+    command.arg(path);
+    command.output().expect("failed to start git");
 }

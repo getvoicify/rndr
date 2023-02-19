@@ -1,9 +1,10 @@
 import { Component, HostBinding, NgZone, OnDestroy } from '@angular/core';
 import { ReactiveComponent } from '../base/reactive.component';
-import { BridgeService } from '../base/services';
+import { BridgeService, Features } from '../base/services';
 import { catchError, map, of, startWith, Subject, switchMap, takeUntil } from 'rxjs';
-import { JsonPipe, NgIf } from '@angular/common';
+import { JsonPipe, NgIf, NgTemplateOutlet } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-missing-deps',
@@ -11,27 +12,24 @@ import { ActivatedRoute, Router } from '@angular/router';
   templateUrl: './missing-deps.component.html',
   imports: [
     JsonPipe,
-    NgIf
+    NgIf,
+    NgTemplateOutlet,
+    MatButtonModule
   ],
   styleUrls: ['./missing-deps.component.scss']
 })
 export class MissingDepsComponent extends ReactiveComponent implements OnDestroy {
+
+  private readonly urls: Record<Features, string> = {
+    aws: 'https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html',
+    docker: 'https://docs.docker.com/get-docker/',
+    git: 'https://git-scm.com/downloads',
+    python: 'https://www.python.org/downloads/',
+  }
+
   private readonly destroy$ = new Subject<void>();
-  private readonly triggerInstallExtDeps$ = new Subject<void>();
   state = this.connect({
-    missingDeps: this.bridgeService.features$,
-    installExtDeps: this.activatedRoute.queryParamMap.pipe(
-      map(queryParamMap => queryParamMap.get('install-ext-deps') === 'true')
-    ),
-    hasExtDeps: this.triggerInstallExtDeps$.pipe(
-      startWith(false),
-      switchMap(() => this.bridgeService.installExtDeps()),
-      map(() => true),
-      catchError((err) => {
-        console.error(err);
-        return of(false);
-      })
-    ),
+    missingDeps: this.bridgeService.features$
   });
 
   constructor(
@@ -41,26 +39,23 @@ export class MissingDepsComponent extends ReactiveComponent implements OnDestroy
     private zone: NgZone,
   ) {
     super();
-    this.bridgeService.installSubject$.pipe(
-      takeUntil(this.destroy$),
-    ).subscribe({
-      complete: async () => {
-        await this.zone.run( () => this.router.navigate(['']));
-      }
-    });
   }
 
   @HostBinding('class') get hostClasses() {
     return 'grid w-full h-full place-content-center';
   }
 
-  installExtDeps() {
-    this.triggerInstallExtDeps$.next();
-  }
-
   override ngOnDestroy() {
     super.ngOnDestroy();
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  async showInstallationInfo(feature: Features) {
+    await this.bridgeService.openExternal(this.urls[feature]);
+  }
+
+  async close() {
+    await this.bridgeService.relaunch();
   }
 }

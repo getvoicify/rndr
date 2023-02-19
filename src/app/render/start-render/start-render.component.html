@@ -1,7 +1,14 @@
-<div class="flex flex-col w-full">
-  <input (change)="selectFile($event)" class="block w-2/3 mb-5 text-xs text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" id="small_size" type="file">
+<div class="flex flex-col items-center w-full">
+  <input (change)="selectFile($event)" class="block mb-5 text-md p-2 text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" id="small_size" type="file">
+  <button (click)="startRender()" class="bottom-2 flex gap-2" mat-raised-button color="primary">
+    <mat-icon>play_arrow</mat-icon>
+    Start
+  </button>
+  <p (click)="showAdvancedSettings()" class="text-center text-xs hover:cursor-pointer hover:underline">Advanced settings</p>
+</div>
 
-  <form class="flex flex-col w-2/3 mx-2 relative" [formGroup]="configFormGroup" (ngSubmit)="startRender()">
+<ng-template #advanceSettings>
+  <form class="flex flex-col mx-2 mt-4 relative" [formGroup]="configFormGroup">
     <fieldset>
       <label>Scene</label>
       <input type="text" placeholder="Scene" formControlName="scene"/>
@@ -26,9 +33,6 @@
       <label>Breakpoint</label>
       <input type="number" placeholder="Breakpoint" formControlName="breakpoint"/>
     </fieldset>
-
-    <button type="submit" class="absolute -right-40 ml-auto bottom-2" mat-mini-fab color="primary">
-      <mat-icon>play_arrow</mat-icon>
-    </button>
+    <button (click)="closeDialog()" mat-raised-button class="w-full" color="accent">Close</button>
   </form>
-</div>
+</ng-template>

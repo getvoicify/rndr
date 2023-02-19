@@ -15,7 +15,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          minor-wording: 'add,Adds,new'
+          minor-wording: 'add,Adds,new,feat'
           major-wording: 'MAJOR,cut-major'
           patch-wording: 'patch,fixes,chore'     # Providing patch-wording will override commits
           # defaulting to a patch bump.

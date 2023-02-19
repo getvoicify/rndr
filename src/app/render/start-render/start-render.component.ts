@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, HostBinding, Inject, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  HostBinding,
+  importProvidersFrom,
+  Inject,
+  inject, TemplateRef,
+  ViewChild
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { CreateRenderConfig, isErrorRenderEvent, isLoadRenderEvent } from '../../models/render';
@@ -8,14 +16,15 @@ import { map } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { SNACKBAR_SERVICE_TOKEN, SnackbarService } from '../../base/services';
+import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-start-render',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatButtonModule, MatIconModule],
+  imports: [CommonModule, ReactiveFormsModule, MatButtonModule, MatIconModule, MatDialogModule],
   templateUrl: './start-render.component.html',
   styleUrls: ['./start-render.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StartRenderComponent extends ReactiveComponent {
   @HostBinding('class') classes = 'flex flex-col items-center justify-center h-full';
@@ -28,9 +37,16 @@ export class StartRenderComponent extends ReactiveComponent {
     error: this.renderService.createRenderEvent$.pipe(
       map(event => isErrorRenderEvent(event))
     )
-  })
+  });
 
-  constructor(private renderService: RenderService, @Inject(SNACKBAR_SERVICE_TOKEN) private snackService: SnackbarService,) {
+  @ViewChild('advanceSettings', { static: true }) advanceSettingsTemplate!: TemplateRef<any>;
+  dialogRef?: MatDialogRef<any>;
+
+  constructor(
+    private renderService: RenderService,
+    @Inject(SNACKBAR_SERVICE_TOKEN) private snackService: SnackbarService,
+    private dialog: MatDialog
+    ) {
     super();
   }
 
@@ -58,5 +74,17 @@ export class StartRenderComponent extends ReactiveComponent {
     }
     const config: CreateRenderConfig = this.configFormGroup.value as CreateRenderConfig;
     this.renderService.createRender(this.file, config);
+  }
+
+  showAdvancedSettings() {
+    this.dialogRef?.close();
+    this.dialogRef = this.dialog.open(this.advanceSettingsTemplate, {
+      minHeight: '520px',
+      minWidth: '240px',
+    });
+  }
+
+  closeDialog() {
+    this.dialogRef?.close();
   }
 }

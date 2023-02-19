@@ -116,7 +116,7 @@ pub fn create_stack(window: Window<Wry>, deps_path: &str, stack_name: &str, stac
                     window.emit("create-stack", Stack { stack_name: stack_name.to_string(), stack_status: StackEvent::Done }).unwrap();
                 },
                 false => {
-                    window.emit("create-stack", Stack { stack_name: stack_name.to_string(), stack_status: StackEvent::Error("Could not create stack".to_string()) }).unwrap();
+                    window.emit("create-stack", Stack { stack_name: stack_name.to_string(), stack_status: StackEvent::Error("Could not create stack file".to_string()) }).unwrap();
                 }
             },
             false => {

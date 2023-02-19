@@ -1,14 +1,14 @@
-<div class="flex flex-row-reverse w-full">
-  <main class="flex flex-col flex-1 p-4">
-    <router-outlet></router-outlet>
-  </main>
-  <aside class="flex flex-col w-52 p-4 bg-gray">
+<div class="flex flex-col w-full">
+  <aside class="flex flex-col w-full p-4 bg-gray">
     <nav>
-      <ul>
+      <ul class="flex gap-8">
         <li><a routerLink="/">Start render</a></li>
-        <li><a routerLink="stacks">Stacks</a></li>
+        <li><a routerLink="jobs">Render jobs</a></li>
         <li><a routerLink="settings">Settings</a></li>
       </ul>
     </nav>
   </aside>
+  <main class="flex flex-col flex-1 p-4">
+    <router-outlet></router-outlet>
+  </main>
 </div>

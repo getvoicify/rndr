@@ -1,9 +1,12 @@
 use std::collections::HashMap;
 use std::env;
 use std::fs::File;
-use std::io::{BufRead, BufWriter, BufReader, Write};
+use std::io::{BufRead, BufReader, BufWriter, Write};
+use std::path::Path;
 
-fn write_file(filename: &str, file_map: HashMap<String, String>) {
+use tauri::{App, Wry};
+
+fn write_hash_to_file(filename: &str, file_map: HashMap<String, String>) {
     let mut file = BufWriter::new(
         File::create(filename).expect("Failed to create file"),
     );
@@ -35,13 +38,27 @@ fn parse_file(filename: &str) -> HashMap<String, String> {
 pub fn add_or_update_env_var(file_name: &str, key: &str, value: &str) {
     let mut file_map = parse_file(file_name);
     file_map.insert(key.to_string(), value.to_string());
-    write_file(file_name, file_map);
+    write_hash_to_file(file_name, file_map);
     match env::var(key) {
         Ok(val) => if val != value {
             env::set_var(key, value);
         },
         Err(_e) => env::set_var(key, value),
     };
+}
+
+pub fn run_bootstrap(file_name: &str, app: &mut App<Wry>) {
+    bootstrap_env(file_name);
+    // array of paths to create
+    let app_data_dir = app.path_resolver().app_data_dir().unwrap();
+    let app_data_dir = app_data_dir.to_str().unwrap();
+    match Path::new(app_data_dir).exists() {
+        true => println!("{} exists", app_data_dir),
+        false => {
+            println!("{} does not exist, creating...", app_data_dir);
+            std::fs::create_dir_all(app_data_dir).unwrap();
+        }
+    }
 }
 
 #[tauri::command]
