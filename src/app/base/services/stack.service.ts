@@ -1,9 +1,23 @@
 import { Inject, Injectable } from '@angular/core';
 import { invoke } from '@tauri-apps/api';
-import { defer, observeOn, Subject, tap } from 'rxjs';
+import {
+  defer,
+  delay,
+  EMPTY,
+  iif,
+  observeOn,
+  of,
+  repeat,
+  retry,
+  retryWhen,
+  Subject,
+  switchMap,
+  tap,
+  throwError, timer
+} from 'rxjs';
 import { appDataDir, homeDir } from '@tauri-apps/api/path';
 import { Event, listen } from '@tauri-apps/api/event';
-import { CreateStackResultModel, isErrorResult } from '../../models';
+import { CreateStackResultModel, ErrorResultModel, isErrorResult } from '../../models';
 import { SNACKBAR_SERVICE_TOKEN, SnackbarService } from './snackbar.service';
 import { Router } from '@angular/router';
 import { asyncScheduler } from 'rxjs';
@@ -37,8 +51,15 @@ export class StackService {
             this.snackService.close();
           }
         );
+        throw new Error(event.payload.stackStatus.Error);
       }
-    })
+    }),
+    switchMap(event => isErrorResult(event.payload) ? throwError(event.payload.stackStatus.Error) : of(event)),
+    retry({
+      delay: (error, retryCount) => {
+        return retryCount === 10 ? throwError(error) : timer(1000 * retryCount);
+      }
+    }),
   );
   constructor(
     @Inject(SNACKBAR_SERVICE_TOKEN) private snackService: SnackbarService,

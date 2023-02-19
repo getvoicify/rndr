@@ -21,6 +21,10 @@ export const appRoutes: Routes = [
     canActivate: [hasDepsGuard, hasExtDepsGuard, hasAwsEnvGuard],
     children: [
       {
+        path: 'jobs',
+        loadComponent: () => import('./job-list/job-list.component').then((m) => m.JobListComponent),
+      },
+      {
         path: 'settings',
         loadChildren: () => import('./settings/settings-routing.module').then((m) => m.SettingsRoutingModule),
       },

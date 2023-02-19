@@ -4,22 +4,23 @@ import {
   catchError,
   combineLatest,
   defer,
-  distinctUntilChanged, filter,
+  distinctUntilChanged,
   from,
   map,
   Observable,
-  of, skipUntil,
-  Subject, switchMap,
-  takeUntil, tap, timer
+  of,
+  Subject,
+  takeUntil
 } from 'rxjs';
 import { appDataDir } from '@tauri-apps/api/path';
 import { BaseDirectory, createDir, exists, removeDir } from '@tauri-apps/api/fs';
 import { Command } from '@tauri-apps/api/shell';
 import { environment } from '../../../environments/environment';
 import { envFileName } from '../../app-constants';
-import { AWSCredentialFormValue, AWSEnvForm } from '../../models';
+import { AWSCredentialFormValue } from '../../models';
 import { Event, listen } from '@tauri-apps/api/event';
 import { StackService } from './stack.service';
+import { process } from '@tauri-apps/api';
 
 export type Features = 'python' | 'docker' | 'aws' | 'git';
 export const requiredFeatures: Features[] = ['python', 'docker', 'aws', 'git'];
@@ -28,6 +29,8 @@ export const requiredFeatures: Features[] = ['python', 'docker', 'aws', 'git'];
   providedIn: 'root'
 })
 export class BridgeService implements OnDestroy {
+  private readonly eventSubject$ = new Subject<Event<boolean | unknown>>();
+  events$ = this.eventSubject$.asObservable();
   constructor(private stackService: StackService) { }
   private readonly destroy$ = new Subject<void>();
   readonly installSubject$ = new Subject<string>();
@@ -69,6 +72,7 @@ export class BridgeService implements OnDestroy {
   );
 
   async installExtDeps() {
+    // TODO: move logic to rust
     const subject = this.installSubject$;
     const dir = await appDataDir();
     const extDepsDir = `${dir}.brh-ext-deps`;
@@ -122,7 +126,7 @@ export class BridgeService implements OnDestroy {
   }
 
   async processRender() {
-    const event$ = new Subject<Event<boolean>>();
+    const event$ = new Subject<Event<boolean | unknown>>();
 
     await listen<boolean>('update-process', (event) => {
       event$.next(event);
@@ -141,15 +145,40 @@ export class BridgeService implements OnDestroy {
     });
 
     event$.asObservable().pipe(
-      filter((event: Event<boolean>) => event.payload),
       takeUntil(this.destroy$),
     ).subscribe({
-      next: (event) => console.log(event)
+      next: (event) => {
+        this.eventSubject$.next(event);
+        this.handleEvent(event);
+      }
     });
   }
 
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private async handleEvent(event: Event<boolean | unknown>) {
+    if (typeof event.payload === 'string' && this.noJobList(event as Event<string>)) {
+      await this.relaunch().catch(console.error);
+      return;
+    }
+  }
+
+  private noJobList(event: Event<string>): boolean {
+    return event.payload.includes('FileNotFoundError') && event.payload.includes('.joblist.csv');
+  }
+
+  async relaunch() {
+    await process.exit(0);
+  }
+
+  async getAppDataDir() {
+    return await appDataDir();
+  }
+
+  async openExternal(url: string) {
+    await invoke('open_url', {url});
   }
 }

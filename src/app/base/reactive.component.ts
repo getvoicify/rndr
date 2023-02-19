@@ -1,10 +1,11 @@
 import { ChangeDetectorRef, Component, inject, OnDestroy, OnInit } from "@angular/core";
-import { from, mergeMap, Observable, ReplaySubject, takeUntil, tap } from "rxjs";
+import { from, mergeMap, Observable, ReplaySubject, Subject, takeUntil, tap } from 'rxjs';
 
 export type ObservableDictionary<T> = { [P in keyof T]: Observable<T[P]> };
 
 const OnInitSubject = Symbol("OnInitSubject");
 const OnDestroySubject = Symbol("OnDestroySubject");
+const OnChangesSubject = Symbol("OnChangesSubject");
 
 @Component({
   selector: "reactive-component",
@@ -14,8 +15,11 @@ const OnDestroySubject = Symbol("OnDestroySubject");
 export class ReactiveComponent implements OnInit, OnDestroy {
   private [OnInitSubject] = new ReplaySubject<void>(1);
   private [OnDestroySubject] = new ReplaySubject<void>(1);
+
+  private cd?: ChangeDetectorRef;
+  private [OnChangesSubject] = new Subject<void>();
   public connect<T>(sources: ObservableDictionary<T>): T {
-    const cd = inject(ChangeDetectorRef);
+    this.cd = inject(ChangeDetectorRef);
     const sink = {} as T;
     const keys = Object.keys(sources) as (keyof T)[];
     const updateSink$ = from(keys).pipe(
@@ -24,7 +28,10 @@ export class ReactiveComponent implements OnInit, OnDestroy {
         tap((value) => sink[key] = value)
       )),
     )
-    updateSink$.subscribe(() => cd.markForCheck());
+    updateSink$.subscribe({
+      next: () => this[OnChangesSubject].next(),
+      error: console.error
+    });
     return sink;
   }
 
@@ -36,5 +43,11 @@ export class ReactiveComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this[OnInitSubject].next();
     this[OnInitSubject].complete();
+    this[OnChangesSubject].asObservable().pipe(
+      takeUntil(this[OnDestroySubject])
+    ).subscribe({
+      next: () => this.cd?.detectChanges(),
+    })
+
   }
 }

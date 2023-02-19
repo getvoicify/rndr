@@ -8,17 +8,23 @@ fn pretty_print_error_message(message: &str) {
     println!("\x1B[31mError:\x1B[0m {}", message);
 }
 
-fn run_cmd(command: &mut Command) -> bool {
+fn emit_message(window: &Window<Wry>, event: &str, payload: &str) {
+    window.emit(event, payload).unwrap();
+}
+
+fn run_cmd<F, M>(command: &mut Command, err_cb: Option<F>, message_cb: Option<M>) -> bool where F: FnOnce(String), M: FnOnce(String) {
     match command.output() {
         Ok(output) => {
             if output.stdout.len() > 0 {
                 println!("Log: {}", str::from_utf8(&output.stdout).unwrap());
+                message_cb.map(|cb| cb(str::from_utf8(&output.stdout).unwrap().to_string()));
             }
             if output.stderr.len() > 0 {
                 pretty_print_error_message(str::from_utf8(&*output.stderr).unwrap());
+                err_cb.map(|f| f(str::from_utf8(&*output.stderr).unwrap().to_string()));
             }
             output.status.success()
-        },
+        }
         Err(e) => {
             println!("python failed: {:?}", e);
             return false;
@@ -36,7 +42,14 @@ pub fn process_render(window: Window<Wry>, deps_path: &str, job_list: &str) {
     command.arg(job_list);
     spawn(move || {
         loop {
-            let success = run_cmd(&mut command);
+            let error_callback = |message: String| {
+                emit_message(&window, "update-process", &message);
+            };
+
+            let message_callback = |message: String| {
+                emit_message(&window, "update-process", &message);
+            };
+            let success = run_cmd(&mut command, Option::from(error_callback), Option::from(message_callback));
             if success {
                 window.emit("update-process", success).unwrap();
             }
@@ -83,6 +96,10 @@ pub fn start_render(file_path: &str, config: RenderConfig, deps_path: &str, job_
         command.arg(&config.breakpoint.unwrap().to_string());
     }
 
-    run_cmd(&mut command);
+    run_cmd(&mut command, Some(|err: String| {
+        pretty_print_error_message(&err);
+    }), Some(|message: String| {
+        pretty_print_error_message(&message);
+    }));
 }
 

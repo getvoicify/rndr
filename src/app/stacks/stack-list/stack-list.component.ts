@@ -48,7 +48,6 @@ export class StackListComponent implements OnDestroy {
     this.stackService.stackEvent$.pipe(
       filter(event => isCompleteResult(event.payload)),
       tap(event => {
-        console.log(event.payload);
         zone.run(() => router.navigate(['/'])).catch(console.error);
       }),
       takeUntil(this.destroy$)
