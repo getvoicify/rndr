@@ -62,7 +62,7 @@ jobs:
       - name: Bump tauri version
         run: |
           echo "PACKAGE_VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
-          ./bump-tauri-version.sh $PACKAGE_VERSION
+          ./bump-app-version.sh $PACKAGE_VERSION
       - name: install app dependencies and build it
         run: npm i -g pnpm && pnpm i && pnpm tauri build
       - uses: tauri-apps/tauri-action@v0
