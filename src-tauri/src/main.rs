@@ -23,16 +23,16 @@ fn main() {
             os_fn::create_blender_folder(&deps_path);
             os_fn::clone_git_project(&deps_path);
             os_fn::init_job_list(app);
-            #[cfg(debug_assertions)] // only include this code on debug builds
-            {
-                match app.get_window("main") {
-                    Some(window) => {
-                        window.open_devtools();
-                        window.close_devtools();
-                    }
-                    None => {}
-                };
-            }
+            // #[cfg(debug_assertions)] // only include this code on debug builds
+            // {
+            //     match app.get_window("main") {
+            //         Some(window) => {
+            //             window.open_devtools();
+            //             window.close_devtools();
+            //         }
+            //         None => {}
+            //     };
+            // }
 
             Ok(())
 
