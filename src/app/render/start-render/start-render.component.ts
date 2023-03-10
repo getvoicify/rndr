@@ -9,14 +9,14 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { SNACKBAR_SERVICE_TOKEN, SnackbarService } from '../../base/services';
 import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-start-render',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatButtonModule, MatIconModule, MatDialogModule],
+  imports: [CommonModule, ReactiveFormsModule, MatButtonModule, MatIconModule, MatDialogModule, RouterModule],
   templateUrl: './start-render.component.html',
-  styleUrls: ['./start-render.component.css'],
+  styleUrls: ['./start-render.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StartRenderComponent extends ReactiveComponent {

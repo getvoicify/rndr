@@ -1,14 +1,22 @@
-<div class="logo">
-  <img src="assets/icon.png" alt="rndr icon" class="block w-[128px] h-[128px] mb-4">
+<div class="flex flex-col items-center justify-center flex-1">
+  <div class="render-drop-zone flex flex-col items-center p-[24px] min-w-[420px] min-h-[240px] border-dashed border-[#017EF0] border rounded-[5px] mb-[24px]">
+    <img src="assets/img/file-icon.svg" class="w-[80px] h-[80px] mb-[24px]" alt="file icon">
+    <p class="text-center text-[#888888] max-w-[250px]">Click to browse or drag and drop your blender file</p>
+  </div>
+
+  <div class="flex flex-col items-center w-full">
+  <!--  <input #fileInput (change)="selectFile($event)" class="block mb-5 text-md p-2 text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" id="small_size" type="file">-->
+    <button (click)="startRender()" class="bottom-2 w-[420px]" mat-raised-button color="primary">
+      Start rendering
+    </button>
+  <!--  <p (click)="showAdvancedSettings()" class="text-center text-xs hover:cursor-pointer hover:underline">Advanced settings</p>-->
+  </div>
 </div>
-<div class="flex flex-col items-center w-full">
-  <input #fileInput (change)="selectFile($event)" class="block mb-5 text-md p-2 text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" id="small_size" type="file">
-  <button (click)="startRender()" class="bottom-2 flex gap-2" mat-raised-button color="primary">
-    <mat-icon>play_arrow</mat-icon>
-    Start
-  </button>
-  <p (click)="showAdvancedSettings()" class="text-center text-xs hover:cursor-pointer hover:underline">Advanced settings</p>
-</div>
+
+<a routerLink="jobs" class="render-queue inline-flex items-center text-[#3291FF]">
+  <img src="assets/img/render-queue-icon.svg" class="w-[24px] h-[24px] mr-[8px]" alt="queue icon">
+  <p>Render queue</p>
+</a>
 
 <ng-template #advanceSettings>
   <form class="flex flex-col mx-2 mt-4 relative" [formGroup]="configFormGroup">
