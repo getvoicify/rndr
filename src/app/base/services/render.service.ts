@@ -1,5 +1,5 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { BehaviorSubject, catchError, defer, EMPTY, filter, Subject, switchMap, takeUntil, tap } from 'rxjs';
+import { BehaviorSubject, catchError, defer, EMPTY, filter, iif, of, Subject, switchMap, takeUntil, tap } from 'rxjs';
 import { CreateRenderConfig, CreateRenderEvent, isLoadRenderEvent } from '../../models/render';
 import { BaseDirectory, writeBinaryFile } from '@tauri-apps/api/fs';
 import { appDataDir } from '@tauri-apps/api/path';
@@ -18,20 +18,25 @@ export class RenderService implements OnDestroy {
 
   constructor() {
     this.createRenderEvent$.pipe(
-      tap(console.log),
       filter(isLoadRenderEvent),
-      switchMap(event => defer(() => this.getFileBinary(event.payload.file)).pipe(
-        switchMap(binary => this.saveBlenderFile(event.payload.file.name, binary as Uint8Array)),
-        switchMap(() => this.startRender(event.payload.file.name, event.payload.config)),
-        tap(() => this.createRenderEventSub$.next({status: 'success'})),
-        catchError(error => {
-          this.createRenderEventSub$.next({
-            status: 'error',
-            error
-          });
-          return EMPTY;
-        })
-      )),
+      switchMap(event => {
+        const { file, config } = event.payload;
+        const isFileBased = typeof file !== 'string';
+        return iif(() => isFileBased, defer(() => this.getFileBinary(file as File)).pipe(
+          switchMap(binary => this.saveBlenderFile((file as File).name, binary as Uint8Array)),
+          switchMap(() => this.startRender( config, (file as File).name)),
+        ), of(file as string).pipe(
+          switchMap(path => this.startRender(config, undefined, path))
+        ))
+      }),
+      tap(() => this.createRenderEventSub$.next({status: 'success'})),
+      catchError(error => {
+        this.createRenderEventSub$.next({
+          status: 'error',
+          error
+        });
+        return EMPTY;
+      }),
       takeUntil(this.destroy$)
     ).subscribe();
   }
@@ -42,14 +47,20 @@ export class RenderService implements OnDestroy {
     await writeBinaryFile(`.config/.blender/${filename}`, binary, {dir: BaseDirectory.AppData});
   }
 
-  private async startRender(filename: string, config: CreateRenderConfig) {
+  private async startRender(config: CreateRenderConfig, filename?: string, path?: string) {
     const dir = await appDataDir();
     const depsPath = `${dir}.brh-ext-deps/rendercli`;
     const jobList = `${dir}.config/.joblist.csv`;
-    await invoke('start_render', { filePath: `${dir}.config/.blender/${filename}`, config, depsPath, jobList });
+    let filePath: string;
+    if (filename) {
+      filePath = `${dir}.config/.blender/${filename}`;
+    } else {
+      filePath = path ?? '';
+    }
+    await invoke('start_render', { filePath, config, depsPath, jobList });
   }
 
-  createRender(file: File, config: CreateRenderConfig) {
+  createRender(file: File | string, config: CreateRenderConfig) {
     this.createRenderEventSub$.next({
       status: 'loading',
       payload: {

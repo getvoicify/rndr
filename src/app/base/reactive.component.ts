@@ -16,7 +16,7 @@ export class ReactiveComponent implements OnInit, OnDestroy {
   private [OnInitSubject] = new ReplaySubject<void>(1);
   private [OnDestroySubject] = new ReplaySubject<void>(1);
 
-  private cd?: ChangeDetectorRef;
+  protected cd?: ChangeDetectorRef;
   private [OnChangesSubject] = new Subject<void>();
   public connect<T>(sources: ObservableDictionary<T>): T {
     this.cd = inject(ChangeDetectorRef);

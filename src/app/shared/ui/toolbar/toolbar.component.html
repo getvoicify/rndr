@@ -1,10 +1,8 @@
-<div class="controls flex items-center space-x-2">
+
+<div class="controls flex justify-self-start items-center space-x-2 absolute">
   <div (click)="close()" class="close w-[10px] h-[10px] bg-[#656565] rounded-full cursor-po
   inter"></div>
   <div (click)="minimize()" class="minimize w-[10px] h-[10px] bg-[#656565] rounded-full cursor-pointer"></div>
   <div (click)="toggleMaximize()" class="maximize w-[10px] h-[10px] bg-[#656565] rounded-full cursor-pointer"></div>
 </div>
-
-<div class="toolbar-title w-fit mx-auto flex items-center justify-center">
-  <p class="uppercase font-bold">rndr</p>
-</div>
+<p data-tauri-drag-region class="uppercase font-bold select-none mx-auto justify-self-center">rndr</p>
