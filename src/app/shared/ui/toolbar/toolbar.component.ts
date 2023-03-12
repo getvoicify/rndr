@@ -21,7 +21,7 @@ export class ToolbarComponent implements OnInit {
     )
   );
 
-  @HostBinding('class') class = 'flex flex-row items-center w-full p-[1rem] bg-[#000000] text-white user-select-none cursor-move fixed top-0 left-0';
+  @HostBinding('class') class = 'flex flex-row items-center w-full p-[1rem] text-white select-none cursor-move fixed top-0 left-0';
 
   ngOnInit() {
     this.maximizeEvent$.subscribe();

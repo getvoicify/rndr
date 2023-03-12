@@ -1,0 +1,18 @@
+:host {
+  &:before {
+    content: '';
+    @apply block mr-[16px] bg-no-repeat bg-[url("/assets/img/blender-icon.svg")] w-[24px] h-[24px];
+  }
+}
+
+.job-status {
+  @apply inline-flex rounded-full bg-gray py-[2px] px-[8px] text-[12px];
+
+  &.failed {
+    @apply bg-[#FF0000];
+  }
+
+  &.success {
+    @apply bg-[#34A853];
+  }
+}

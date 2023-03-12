@@ -117,10 +117,10 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 600,
+        "height": 690,
         "resizable": true,
         "title": "RNDR",
-        "width": 800,
+        "width": 966,
         "decorations": false
       }
     ]
