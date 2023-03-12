@@ -1,14 +1,32 @@
-<div class="logo">
-  <img src="assets/icon.png" alt="rndr icon" class="block w-[128px] h-[128px] mb-4">
+<div class="flex flex-col items-center justify-center flex-1">
+  <div [ngClass]="{'hovering': state.hoverState === 'hover'}" class="render-drop-zone flex flex-col items-center p-[24px] min-w-[460px] min-h-[240px] border-dashed border-[#017EF0] border rounded-[5px] mb-[24px] box-border">
+    <img src="assets/img/file-icon.svg" class="w-[80px] h-[80px] mb-[24px]" alt="file icon">
+    <p (click)="fileInput.click()" *ngIf="!state.file" class="text-center text-[#888888] max-w-[250px] cursor-pointer">Click to browse or drag and drop your blender file</p>
+    <div *ngIf="state.file" class="file w-full  flex flex-col items-center">
+      <div class="file-wrapper p-[6px] w-full">
+        <p class="text-center text-[#888888] text-[14px] max-w-[250px]">{{state.file ?? file?.name}}</p>
+        <button (click)="removeFile()" class="bg-[url('/assets/img/cancel-icon.svg')] bg-no-repeat bg-center w-[16px] h-[16px] ml-auto"></button>
+      </div>
+      <button (click)="removeFile()" class="inline-flex gap-2 mt-2 items-center text-[#3291FF]">
+        Replace file
+        <img src="assets/img/refresh-icon.svg" alt="refresh">
+      </button>
+    </div>
+  </div>
+  <input #fileInput (change)="selectFile($event)" class="hidden" id="small_size" type="file">
+
+  <div class="flex flex-col items-center w-full">
+    <button (click)="startRender()" class="bottom-2 w-[460px]" mat-raised-button color="primary">
+      Start rendering
+    </button>
+  <!--  <p (click)="showAdvancedSettings()" class="text-center text-xs hover:cursor-pointer hover:underline">Advanced settings</p>-->
+  </div>
 </div>
-<div class="flex flex-col items-center w-full">
-  <input #fileInput (change)="selectFile($event)" class="block mb-5 text-md p-2 text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" id="small_size" type="file">
-  <button (click)="startRender()" class="bottom-2 flex gap-2" mat-raised-button color="primary">
-    <mat-icon>play_arrow</mat-icon>
-    Start
-  </button>
-  <p (click)="showAdvancedSettings()" class="text-center text-xs hover:cursor-pointer hover:underline">Advanced settings</p>
-</div>
+
+<a routerLink="jobs" class="render-queue inline-flex items-center text-[#3291FF]">
+  <img src="assets/img/render-queue-icon.svg" class="w-[24px] h-[24px] mr-[8px]" alt="queue icon">
+  <p>Render queue</p>
+</a>
 
 <ng-template #advanceSettings>
   <form class="flex flex-col mx-2 mt-4 relative" [formGroup]="configFormGroup">

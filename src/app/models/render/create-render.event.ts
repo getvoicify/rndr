@@ -25,7 +25,7 @@ interface CreateRenderErrorEvent extends ICreateRenderEvent {
 interface CreateRenderLoadingEvent extends ICreateRenderEvent {
   status: 'loading';
   payload: {
-    file: File;
+    file: File | string;
     config: CreateRenderConfig;
   }
 }

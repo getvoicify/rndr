@@ -12,6 +12,14 @@
   },
   "tauri": {
     "allowlist": {
+      "window": {
+        "maximize": true,
+        "minimize": true,
+        "unmaximize": true,
+        "unminimize": true,
+        "close": true,
+        "startDragging": true
+      },
       "all": false,
       "shell": {
         "all": false,
@@ -109,10 +117,11 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 600,
+        "height": 690,
         "resizable": true,
         "title": "RNDR",
-        "width": 800
+        "width": 966,
+        "decorations": false
       }
     ]
   }

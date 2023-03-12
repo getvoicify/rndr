@@ -1,0 +1,21 @@
+.file-wrapper {
+  background: #111111;
+  border: 1px solid #333333;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  &:before {
+    content: 'File';
+    display: inline-block;
+    background: #7928CA;
+    border-radius: 999px;
+    padding: 2px 12px;
+    margin-right: 4px;
+  }
+}
+
+:host {
+  background: rgba(0,0, 0, 0.4);
+}
