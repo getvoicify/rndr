@@ -23,6 +23,7 @@ specifiers:
   '@tauri-apps/api': ^1.2.0
   '@tauri-apps/cli': ^1.2.3
   '@types/jest': ^29.4.0
+  '@types/uuid': ^9.0.1
   autoprefixer: ^10.4.13
   jest: ^29.5.0
   jest-environment-jsdom: ^29.5.0
@@ -64,6 +65,7 @@ devDependencies:
   '@tailwindcss/forms': 0.5.3_tailwindcss@3.2.4
   '@tauri-apps/cli': 1.2.3
   '@types/jest': 29.4.0
+  '@types/uuid': 9.0.1
   autoprefixer: 10.4.13_postcss@8.4.21
   jest: 29.5.0_ts-node@10.9.1
   jest-environment-jsdom: 29.5.0
@@ -3437,6 +3439,10 @@ packages:
 
   /@types/tough-cookie/4.0.2:
     resolution: {integrity: sha512-Q5vtl1W5ue16D+nIaW8JWebSSraJVlK+EthKn7e7UcD4KWsaSJ8BqGPXNaPghgtcn/fhvrN17Tv8ksUsQpiplw==}
+    dev: true
+
+  /@types/uuid/9.0.1:
+    resolution: {integrity: sha512-rFT3ak0/2trgvp4yYZo5iKFEPsET7vKydKF+VRCxlQ9bpheehyAJH89dAkaLEq/j/RZXJIqcgsmPJKUP1Z28HA==}
     dev: true
 
   /@types/ws/8.5.4:
