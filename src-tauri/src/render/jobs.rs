@@ -22,8 +22,10 @@ pub struct Job {
     status: String,
     cloudid: String,
     error: String,
-    startedAt: String,
-    stoppedAt: String,
+    #[serde(rename = "startedAt")]
+    started_at: String,
+    #[serde(rename = "stoppedAt")]
+    stopped_at: String,
     use_large_disk: String,
     parent: String,
 }

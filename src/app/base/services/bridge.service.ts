@@ -40,6 +40,8 @@ export class BridgeService implements OnDestroy {
       distinctUntilChanged()
     ))
   );
+
+  readonly hasAllDependencies$: Observable<boolean> = defer(() => invoke<boolean>('has_dependencies'));
   canRun$: Observable<boolean> = this.checkRequiredFeatures$.pipe(
     map(features => features.every(feature => feature))
   );
@@ -71,42 +73,6 @@ export class BridgeService implements OnDestroy {
     })
   );
 
-  async installExtDeps() {
-    // TODO: move logic to rust
-    const subject = this.installSubject$;
-    const dir = await appDataDir();
-    const extDepsDir = `${dir}.brh-ext-deps`;
-    const command = new Command('git-clone', ['clone', environment.depsRepo, extDepsDir]);
-
-    const depsDirExists = await exists('.brh-ext-deps', { dir: BaseDirectory.AppData });
-
-    if (depsDirExists) {
-      await removeDir('.brh-ext-deps', { recursive: true, dir: BaseDirectory.AppData });
-    }
-    await createDir('.brh-ext-deps', { recursive: true, dir: BaseDirectory.AppData });
-
-
-    command.on('close', ({code}: { code: number, signal?: unknown }) => {
-      console.log(code);
-      if (code === 0) {
-        subject.complete();
-      } else {
-        subject.error(new Error(`git clone exited with code ${code}`));
-      }
-    });
-
-    command.stdout.on('data', line => console.log(`command stdout: "${line}"`));
-    command.stderr.on('data', line => console.error(`command stderr: "${line}"`));
-
-    await command.execute();
-
-    command.on('error', (error) => {
-      subject.error(error);
-    });
-
-    return subject.asObservable();
-  }
-
   hasEnv$(env: string): Observable<boolean> {
     return defer(() => invoke<boolean>('check_env_var', {name: env}));
   }
@@ -123,6 +89,14 @@ export class BridgeService implements OnDestroy {
     }));
     const result = await Promise.all(promises);
     console.log('DONE', result);
+  }
+
+  listenToEvent<T>(event: string): Observable<Event<T>> {
+    return new Observable<Event<T>>(subscriber => {
+      listen<T>(event, (event) => {
+        subscriber.next(event);
+      }).catch(err => subscriber.error(err));
+    });
   }
 
   async processRender() {

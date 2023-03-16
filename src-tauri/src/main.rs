@@ -3,9 +3,10 @@
     windows_subsystem = "windows"
 )]
 
-use tauri::Manager;
+use tauri::{WindowEvent};
 use blender_batch_render_helper::{os_fn, process, aws, jobs};
 use blender_batch_render_helper::env_mod;
+use blender_batch_render_helper::installers::{installer};
 
 fn main() {
     tauri::Builder::default()
@@ -23,19 +24,21 @@ fn main() {
             os_fn::create_blender_folder(&deps_path);
             os_fn::clone_git_project(&deps_path);
             os_fn::init_job_list(app);
-            // #[cfg(debug_assertions)] // only include this code on debug builds
-            // {
-            //     match app.get_window("main") {
-            //         Some(window) => {
-            //             window.open_devtools();
-            //             window.close_devtools();
-            //         }
-            //         None => {}
-            //     };
-            // }
-
             Ok(())
 
+        })
+        .on_window_event(|e| match e.event() {
+            WindowEvent::Resized(_) => {}
+            WindowEvent::Moved(_) => {}
+            WindowEvent::CloseRequested { .. } => {}
+            WindowEvent::Destroyed => {}
+            WindowEvent::Focused(focused) => {
+                e.window().emit("focused", focused).unwrap();
+            }
+            WindowEvent::ScaleFactorChanged { .. } => {}
+            WindowEvent::FileDrop(_) => {}
+            WindowEvent::ThemeChanged(_) => {}
+            _ => {}
         })
         .invoke_handler(tauri::generate_handler![
             aws::create_stack,
@@ -52,6 +55,8 @@ fn main() {
             env_mod::get_env_var,
             env_mod::bootstrap_env,
             env_mod::add_or_update_env_var,
+            installer::has_dependencies,
+            installer::start_installation,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

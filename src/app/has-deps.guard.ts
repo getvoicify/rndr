@@ -1,13 +1,13 @@
 import { Router } from '@angular/router';
 import { inject } from '@angular/core';
 import { BridgeService, StackService } from './base/services';
-import { combineLatest, map, tap } from 'rxjs';
+import { combineLatest, map } from 'rxjs';
 import { AWSCredentialFormValue } from './models';
 
 export const hasDepsGuard = () => {
   const router = inject(Router);
   const bridgeService = inject(BridgeService);
-  return bridgeService.canRun$.pipe(
+  return bridgeService.hasAllDependencies$.pipe(
     map(canRun => {
       return canRun ? true : router.parseUrl('/missing-deps');
     })
