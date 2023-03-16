@@ -25,16 +25,8 @@ impl Dependency for Git {
 
     #[cfg(target_os = "windows")]
     fn install(&mut self) -> bool {
-        let output = Command::new("powershell")
-            .arg("-Command")
-            .arg("if (!(Get-Command git -ErrorAction SilentlyContinue)) \
-            { Invoke-WebRequest https://github.com/git-for-windows/git/releases/download/v2.33.1.windows.1/Git-2.33.1-64-bit.exe \
-            -OutFile $env:TEMP\\Git-2.33.1-64-bit.exe; Start-Process -FilePath $env:TEMP\\Git-2.33.1-64-bit.exe -ArgumentList \
-            '/SILENT /NORESTART /COMPONENTS=\"icons,ext\\"/" -Wait }"
-            )
-            .output()
-            .expect("failed to execute process");
-        output.status.success()
+        // TODO: implement windows installer
+        true
     }
 
     #[cfg(target_os = "macos")]
