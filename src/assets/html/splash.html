@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Splashscreen</title>
+</head>
+<body>
+  <div id="splashscreen">
+    <div class="splashscreen__content">
+      <img src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png" alt="Google">
+      <p>Google</p>
+    </div>
+  </div>
+  <script>
+    window.addEventListener('load', () => {
+      const splashscreen = document.getElementById('splashscreen');
+      splashscreen.classList.add('splashscreen--hide');
+    });
+  </script>
+</body>
+</html>

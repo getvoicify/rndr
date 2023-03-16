@@ -1,8 +1,10 @@
 pub mod environment_modifiers;
 pub mod render;
 pub mod utils;
+pub mod installers;
 pub use environment_modifiers::env_mod;
 pub use render::aws;
 pub use render::jobs;
 pub use render::os_fn;
 pub use render::process;
+pub use installers::installer;

@@ -2,7 +2,7 @@ use std::process::Command;
 use std::{env, fs};
 use std::fs::File;
 use std::path::{Path, PathBuf};
-use tauri::{App, command, Wry};
+use tauri::{App, Wry};
 
 fn check_file_exists(file: &str) -> bool {
     let path = Path::new(file);

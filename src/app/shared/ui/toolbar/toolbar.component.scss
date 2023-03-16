@@ -1,3 +1,19 @@
 :host {
   background: rgba(0, 0, 0, 0.1);
+
+  .controls:hover, .controls.focused {
+    cursor: pointer;
+    .close {
+      background-color: #ff605c;
+      transition: background-color ease-in-out 200ms;
+    }
+    .minimize {
+      background-color: #ffbd44;
+      transition: background-color ease-in-out 200ms;
+    }
+    .maximize {
+      background-color: #00ca4d;
+      transition: background-color ease-in-out 200ms;
+    }
+  }
 }

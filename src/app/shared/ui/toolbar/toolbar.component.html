@@ -1,8 +1,7 @@
 
-<div class="controls flex justify-self-start items-center space-x-2 absolute">
-  <div (click)="close()" class="close w-[10px] h-[10px] bg-[#656565] rounded-full cursor-po
-  inter"></div>
-  <div (click)="minimize()" class="minimize w-[10px] h-[10px] bg-[#656565] rounded-full cursor-pointer"></div>
-  <div (click)="toggleMaximize()" class="maximize w-[10px] h-[10px] bg-[#656565] rounded-full cursor-pointer"></div>
+<div [ngClass]="{'focused': state.focused}" class="controls flex justify-self-start items-center space-x-2 absolute">
+  <div (click)="close()" class="close w-[12px] h-[12px] bg-[#656565] rounded-full cursor-pointer"></div>
+  <div (click)="minimize()" class="minimize w-[12px] h-[12px] bg-[#656565] rounded-full cursor-pointer"></div>
+  <div (click)="toggleMaximize()" class="maximize w-[12px] h-[12px] bg-[#656565] rounded-full cursor-pointer"></div>
 </div>
 <p data-tauri-drag-region class="uppercase font-bold select-none mx-auto justify-self-center">rndr</p>

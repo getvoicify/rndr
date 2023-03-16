@@ -192,11 +192,11 @@
   samples:               number;
   scene:                 string;
   source_blend_path:     string;
-  startedAt:             string;
+  started_at:             string;
   startframe:            number;
   status:                string;
   step:                  number;
-  stoppedAt:             string;
+  stopped_at:             string;
   use_large_disk:        string;
   xres:                  number;
   yres:                  number;
@@ -218,11 +218,11 @@ export interface Job {
   samples:               number;
   scene:                 string;
   source_blend_path:     string;
-  startedAt?:             Date;
+  started_at?:             Date;
   startframe:            number;
   status:                string;
   step:                  number;
-  stoppedAt?:             Date;
+  stopped_at?:             Date;
   use_large_disk:        boolean;
   xres:                  number;
   yres:                  number;
@@ -232,8 +232,8 @@ export const jobMapper = <span class="fstat-no" title="function not covered" >(j
 <span class="cstat-no" title="statement not covered" >  ...job,</span>
 <span class="cstat-no" title="statement not covered" >  is_uploaded: job.is_uploaded === 'True' || job.is_uploaded === 'true',</span>
 <span class="cstat-no" title="statement not covered" >  use_large_disk: job.use_large_disk === 'True' || job.use_large_disk === 'true',</span>
-<span class="cstat-no" title="statement not covered" >  startedAt: job.startedAt ? new Date(parseInt(job.startedAt, 10)) : undefined,</span>
-<span class="cstat-no" title="statement not covered" >  stoppedAt: job.stoppedAt ?  new Date(parseInt(job.stoppedAt, 10)) : undefined,</span>
+<span class="cstat-no" title="statement not covered" >  started_at: job.started_at ? new Date(parseInt(job.started_at, 10)) : undefined,</span>
+<span class="cstat-no" title="statement not covered" >  stopped_at: job.stopped_at ?  new Date(parseInt(job.stopped_at, 10)) : undefined,</span>
 });</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
