@@ -1,0 +1,2 @@
+<div *ngIf="mode === 'indeterminate'" class="loading-indicator w-[24px] h-[4px] bg-[#D9D9D9] rounded-[2px] absolute"></div>
+<div *ngIf="mode === 'determinate'" [ngStyle]="{width: progressStyle}" class="loading-indicator h-[4px] bg-[#D9D9D9] rounded-[2px]"></div>

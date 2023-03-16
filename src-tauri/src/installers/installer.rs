@@ -25,7 +25,7 @@ impl Installer {
 }
 
 #[tauri::command]
-pub fn start_installation() -> bool {
+pub async fn start_installation() -> bool {
     let mut installers: Vec<Installer> = Vec::new();
 
     for installer in os_dependencies() {

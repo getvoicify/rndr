@@ -1,61 +1,64 @@
-import { Component, HostBinding, NgZone, OnDestroy } from '@angular/core';
+import { Component, HostBinding, OnInit } from '@angular/core';
 import { ReactiveComponent } from '../base/reactive.component';
-import { BridgeService, Features } from '../base/services';
-import { catchError, map, of, startWith, Subject, switchMap, takeUntil } from 'rxjs';
-import { JsonPipe, NgIf, NgTemplateOutlet } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
+import { BridgeService } from '../base/services';
+import { Router } from '@angular/router';
+import { LoaderComponent } from '../shared/ui';
+import { interval, Observable, startWith, switchMap } from 'rxjs';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
   selector: 'app-missing-deps',
   standalone: true,
   templateUrl: './missing-deps.component.html',
   imports: [
-    JsonPipe,
-    NgIf,
-    NgTemplateOutlet,
-    MatButtonModule
+    LoaderComponent,
+    AsyncPipe
   ],
   styleUrls: ['./missing-deps.component.scss']
 })
-export class MissingDepsComponent extends ReactiveComponent implements OnDestroy {
+export class MissingDepsComponent extends ReactiveComponent implements OnInit {
 
-  private readonly urls: Record<Features, string> = {
-    aws: 'https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html',
-    docker: 'https://docs.docker.com/get-docker/',
-    git: 'https://git-scm.com/downloads',
-    python: 'https://www.python.org/downloads/',
-  }
+  arrayOfTexts = ['Warming up the GPUs', 'Sharpening pencils', 'Watching tutorials', 'Coffee break'];
 
-  private readonly destroy$ = new Subject<void>();
-  state = this.connect({
-    missingDeps: this.bridgeService.features$
-  });
+  cycleTexts$ = new Observable<string>(subscriber => {
+    let i = 0;
+    let prevIndex = -1;
+
+    const intervalSubscription = interval(5000).subscribe(() => {
+      let index = Math.floor(Math.random() * this.arrayOfTexts.length);
+      while (index === prevIndex) {
+        index = Math.floor(Math.random() * this.arrayOfTexts.length);
+      }
+      prevIndex = index;
+      subscriber.next(this.arrayOfTexts[index]);
+      i++;
+    });
+
+    return () => {
+      intervalSubscription.unsubscribe();
+    };
+  }).pipe(
+    startWith(this.arrayOfTexts[0]),
+  );
+  state = this.connect({});
 
   constructor(
-    private activatedRoute: ActivatedRoute,
     private bridgeService: BridgeService,
     private router: Router,
-    private zone: NgZone,
   ) {
     super();
   }
 
+  override ngOnInit() {
+    super.ngOnInit();
+    this.bridgeService.startInstallation()
+      .pipe(
+        switchMap(() => this.router.navigate(['/']))
+      )
+      .subscribe();
+  }
+
   @HostBinding('class') get hostClasses() {
-    return 'grid w-full h-full place-content-center';
-  }
-
-  override ngOnDestroy() {
-    super.ngOnDestroy();
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  async showInstallationInfo(feature: Features) {
-    await this.bridgeService.openExternal(this.urls[feature]);
-  }
-
-  async close() {
-    await this.bridgeService.relaunch();
+    return 'grid w-full h-full relative';
   }
 }

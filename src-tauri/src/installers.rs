@@ -7,3 +7,4 @@ pub mod dependency_checker;
 pub mod installer;
 pub mod git_installer;
 pub mod docker_installer;
+mod test_installer;

@@ -155,4 +155,8 @@ export class BridgeService implements OnDestroy {
   async openExternal(url: string) {
     await invoke('open_url', {url});
   }
+
+  startInstallation(): Observable<boolean> {
+    return defer(() => invoke<boolean>('start_installation'));
+  }
 }
