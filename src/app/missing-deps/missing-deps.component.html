@@ -1,37 +1,8 @@
-<div *ngIf="state.missingDeps" class="content flex flex-col justify-center items-center">
-  <h1 class="text-2xl mb-4 font-extrabold">Missing dependencies</h1>
-  <ul>
-    <ng-container *ngIf="!state.missingDeps.aws" [ngTemplateOutlet]="noAws"></ng-container>
-    <ng-container *ngIf="!state.missingDeps.docker" [ngTemplateOutlet]="noDocker"></ng-container>
-    <ng-container *ngIf="!state.missingDeps.git" [ngTemplateOutlet]="noGit"></ng-container>
-    <ng-container *ngIf="!state.missingDeps.python" [ngTemplateOutlet]="noPython"></ng-container>
-    <li class="p-2">
-      <button class="w-full" mat-raised-button color="accent" (click)="close()">Close</button>
-    </li>
-  </ul>
+<div class="logo-wrap absolute w-full mt-[40px]">
+  <div class="bg-[url('/assets/img/logo.svg')] bg-no-repeat w-[200px] h-[24px] mx-auto"></div>
 </div>
-
-<ng-template #noAws>
-  <li class="p-2">
-    <h2 class="text-lg mb-2 font-bold">AWS cli is not installed</h2>
-    <p class="hover:underline hover:cursor-pointer" (click)="showInstallationInfo('aws')">Install the AWS cli and try again</p>
-  </li>
-</ng-template>
-<ng-template #noDocker>
-  <li class="p-2">
-    <h2 class="text-lg mb-2 font-bold">Docker is not installed</h2>
-    <p class="hover:underline hover:cursor-pointer" (click)="showInstallationInfo('docker')">Install Docker and try again</p>
-  </li>
-</ng-template>
-<ng-template #noGit>
-  <li class="p-2">
-    <h2 class="text-lg mb-2 font-bold">Git is not installed</h2>
-    <p class="hover:underline hover:cursor-pointer" (click)="showInstallationInfo('git')">Install Git and try again</p>
-  </li>
-</ng-template>
-<ng-template #noPython>
-  <li class="p-2">
-    <h2 class="text-lg mb-2 font-bold">Python is not installed</h2>
-    <p class="hover:underline hover:cursor-pointer" (click)="showInstallationInfo('python')">Install Python and try again</p>
-  </li>
-</ng-template>
+<main class="w-[320px] mx-auto flex flex-col justify-center">
+  <rndr-loader mode="indeterminate"></rndr-loader>
+  <h1 class="text-center w-[320px] my-[16px]">{{ cycleTexts$ | async }}</h1>
+  <p class="text-center">Please wait. This might take a while</p>
+</main>

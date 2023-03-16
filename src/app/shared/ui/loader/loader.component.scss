@@ -1,0 +1,28 @@
+:host {
+  @apply block rounded-[2px] w-full h-[4px] relative;
+  background: rgba(255, 255, 255, 0.1);
+
+  &.indeterminate {
+    .loading-indicator {
+      animation: indeterminate 4s linear infinite;
+    }
+  }
+
+  &.determinate {
+    .loading-indicator {
+      transition: width 0.3s ease-in-out;
+    }
+  }
+}
+
+@keyframes indeterminate {
+  0% {
+    left: 0;
+  }
+  50% {
+    left: calc(100% - 24px);
+  }
+  100% {
+    left: 0;
+  }
+}

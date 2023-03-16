@@ -4,7 +4,7 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { CreateRenderConfig, isErrorRenderEvent, isLoadRenderEvent } from '../../models/render';
 import { RenderService } from '../../base/services/render.service';
 import { ReactiveComponent } from '../../base/reactive.component';
-import { BehaviorSubject, map, merge, Observable, startWith, tap } from 'rxjs';
+import { BehaviorSubject, filter, interval, map, merge, Observable, startWith, tap } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { SNACKBAR_SERVICE_TOKEN, SnackbarService } from '../../base/services';
@@ -12,13 +12,14 @@ import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dial
 import { Router, RouterModule } from '@angular/router';
 import { appWindow, FileDropEvent } from '@tauri-apps/api/window';
 import { Event as TauriEvent, UnlistenFn } from '@tauri-apps/api/event';
+import { LoaderComponent } from '../../shared/ui';
 
 type DropEventType = 'drop' | 'hover' | 'cancel';
 
 @Component({
   selector: 'app-start-render',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatButtonModule, MatIconModule, MatDialogModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, MatButtonModule, MatIconModule, MatDialogModule, RouterModule, LoaderComponent],
   templateUrl: './start-render.component.html',
   styleUrls: ['./start-render.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -62,7 +63,7 @@ export class StartRenderComponent extends ReactiveComponent {
       map(event => event?.type ?? 'idle'),
       startWith('idle')
     ),
-    file: this.filePath$
+    file: this.filePath$,
   });
 
   @ViewChild('advanceSettings', { static: true }) advanceSettingsTemplate!: TemplateRef<any>;
