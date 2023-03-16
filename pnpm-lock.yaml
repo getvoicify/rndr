@@ -35,6 +35,7 @@ specifiers:
   ts-node: ^10.9.1
   tslib: ^2.3.0
   typescript: ~4.8.0
+  uuid: ^9.0.0
   zone.js: ~0.12.0
 
 dependencies:
@@ -56,6 +57,7 @@ dependencies:
   '@tauri-apps/api': 1.2.0
   rxjs: 7.8.0
   tslib: 2.4.1
+  uuid: 9.0.0
   zone.js: 0.12.0
 
 devDependencies:
@@ -8547,6 +8549,11 @@ packages:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
     hasBin: true
     dev: true
+
+  /uuid/9.0.0:
+    resolution: {integrity: sha512-MXcSTerfPa4uqyzStbRoTgt5XIe3x5+42+q1sDuy3R5MDk66URdLMOZe5aPX/SQd+kuYAh0FdP/pO28IkQyTeg==}
+    hasBin: true
+    dev: false
 
   /v8-compile-cache-lib/3.0.1:
     resolution: {integrity: sha512-wa7YjyUGfNZngI/vtK0UHAN+lgDCxBPCylVXGp0zu59Fz5aiGtNXaq3DhIov063MorB+VfufLh3JlF2KdTK3xg==}
