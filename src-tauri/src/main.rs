@@ -9,6 +9,12 @@ use blender_batch_render_helper::env_mod;
 use blender_batch_render_helper::installers::{installer};
 
 fn main() {
+
+    let _guard = sentry::init(("https://7b77e4e32d45454a822266a081b1c86f@o4504853594832896.ingest.sentry.io/4504853597454336", sentry::ClientOptions {
+        release: sentry::release_name!(),
+        ..Default::default()
+    }));
+
     tauri::Builder::default()
         .setup(|app| {
             let path = app.path_resolver().app_data_dir().unwrap();
