@@ -3,17 +3,25 @@
     windows_subsystem = "windows"
 )]
 
-use tauri::{WindowEvent};
+use tauri::{CustomMenuItem, Menu, MenuEntry, MenuItem, Submenu, WindowEvent};
 use blender_batch_render_helper::{os_fn, process, aws, jobs};
 use blender_batch_render_helper::env_mod;
 use blender_batch_render_helper::installers::{installer};
 
-fn main() {
 
-    let _guard = sentry::init(("https://7b77e4e32d45454a822266a081b1c86f@o4504853594832896.ingest.sentry.io/4504853597454336", sentry::ClientOptions {
+fn main() {
+    let _guard = sentry::init(("https://3bba3730ab29474d8991d8e057fce4b9@o4504853594832896.ingest.sentry.io/4504860192931840", sentry::ClientOptions {
         release: sentry::release_name!(),
         ..Default::default()
     }));
+    let _sentry = sentry::init(sentry::ClientOptions {
+        release: sentry::release_name!(),
+        // To set a uniform sample rate
+        traces_sample_rate: 0.2,
+        // The Rust SDK does not currently support `traces_sampler`
+
+        ..Default::default()
+    });
 
     tauri::Builder::default()
         .setup(|app| {
@@ -33,6 +41,16 @@ fn main() {
             Ok(())
 
         })
+        .menu(Menu::with_items([
+            MenuEntry::Submenu(Submenu::new(
+                "File",
+                Menu::with_items([
+                    #[cfg(target_os = "macos")]
+                        CustomMenuItem::new("hello", "Hello").into(),
+                    MenuItem::CloseWindow.into(),
+                ]),
+            )),
+        ]))
         .on_window_event(|e| match e.event() {
             WindowEvent::Resized(_) => {}
             WindowEvent::Moved(_) => {}

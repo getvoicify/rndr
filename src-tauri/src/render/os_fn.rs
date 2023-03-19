@@ -36,7 +36,10 @@ pub fn get_os() {
 pub fn check_os_feature(feature: &str) -> bool {
     let output = match Command::new(feature).arg("--version").output() {
         Ok(output) => output,
-        Err(_) => return false,
+        Err(err) => {
+            sentry::capture_error(&err);
+            return false;
+        },
     };
     println!("output: {:?}", output);
     match output.status.success() {
@@ -61,6 +64,7 @@ fn install_pip_deps(dep: &str) -> bool {
         },
         Err(e) => {
             println!("pip install colorama failed");
+            sentry::capture_error(&e);
             println!("error: {:?}", e);
             false
         },

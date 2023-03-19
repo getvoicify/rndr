@@ -1,4 +1,5 @@
 use std::process::Command;
+use tauri::{Window, Wry};
 use crate::installers::dependency::Dependency;
 
 struct AwsCli {}
@@ -13,8 +14,9 @@ impl Dependency for AwsCli {
         output.status.success()
     }
 
-    fn install(&mut self) -> bool {
+    fn install(&mut self, window: Window<Wry>) -> bool {
         // Install the AWS CLI depending on the operating system
+        window.emit("inbound://installing_dependency", "Installing aws cli").unwrap();
         let output = if cfg!(target_os = "linux") {
             // Install on Linux using the curl command
             Command::new("curl")

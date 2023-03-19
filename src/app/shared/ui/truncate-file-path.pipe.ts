@@ -6,7 +6,12 @@ import { Pipe, PipeTransform } from '@angular/core';
 })
 export class TruncateFilePathPipe implements PipeTransform {
 
-  transform(path: string, maxLength: number): string {
+  transform(path?: string, maxLength = 0): string {
+
+    if (!path) {
+      return '';
+    }
+
     const fileName = this.extractFileName(path);
     const extensionIndex = fileName.lastIndexOf(".");
     if (fileName.length <= maxLength) {

@@ -4,7 +4,7 @@
     <p (click)="fileInput.click()" *ngIf="!state.file" class="text-center text-[#888888] max-w-[250px] cursor-pointer">Click to browse or drag and drop your blender file</p>
     <div *ngIf="state.file" class="file w-full  flex flex-col items-center">
       <div class="file-wrapper p-[6px] w-full">
-        <p class="text-center text-[#888888] text-[14px] max-w-[250px]">{{state.file ?? file?.name}}</p>
+        <p class="text-center text-[#888888] text-[14px] max-w-[250px]">{{ fileName | truncateFilePath: 10 }}</p>
         <button (click)="removeFile()" class="bg-[url('/assets/img/cancel-icon.svg')] bg-no-repeat bg-center w-[16px] h-[16px] ml-auto"></button>
       </div>
       <button (click)="removeFile()" class="inline-flex gap-2 mt-2 items-center text-[#3291FF]">

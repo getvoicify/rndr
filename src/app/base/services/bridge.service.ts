@@ -1,25 +1,11 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { invoke } from '@tauri-apps/api/tauri';
-import {
-  catchError,
-  combineLatest,
-  defer,
-  distinctUntilChanged,
-  from,
-  map,
-  Observable,
-  of,
-  Subject,
-  takeUntil
-} from 'rxjs';
+import { catchError, defer, from, map, Observable, of, Subject, takeUntil, tap } from 'rxjs';
 import { appDataDir } from '@tauri-apps/api/path';
-import { BaseDirectory, createDir, exists, removeDir } from '@tauri-apps/api/fs';
-import { Command } from '@tauri-apps/api/shell';
-import { environment } from '../../../environments/environment';
+import { BaseDirectory, exists } from '@tauri-apps/api/fs';
 import { envFileName } from '../../app-constants';
 import { AWSCredentialFormValue } from '../../models';
 import { Event, listen } from '@tauri-apps/api/event';
-import { StackService } from './stack.service';
 import { process } from '@tauri-apps/api';
 
 export type Features = 'python' | 'docker' | 'aws' | 'git';
@@ -31,29 +17,11 @@ export const requiredFeatures: Features[] = ['python', 'docker', 'aws', 'git'];
 export class BridgeService implements OnDestroy {
   private readonly eventSubject$ = new Subject<Event<boolean | unknown>>();
   events$ = this.eventSubject$.asObservable();
-  constructor(private stackService: StackService) { }
   private readonly destroy$ = new Subject<void>();
-  readonly installSubject$ = new Subject<string>();
-  checkFeature$: (feature: Features) => Observable<boolean> = (feature: Features) => defer(() => invoke<boolean>('check_os_feature', {feature}));
-  private readonly checkRequiredFeatures$: Observable<boolean[]> = combineLatest(
-    requiredFeatures.map(feature => this.checkFeature$(feature).pipe(
-      distinctUntilChanged()
-    ))
-  );
 
-  readonly hasAllDependencies$: Observable<boolean> = defer(() => invoke<boolean>('has_dependencies'));
-  canRun$: Observable<boolean> = this.checkRequiredFeatures$.pipe(
-    map(features => features.every(feature => feature))
-  );
-
-  features$: Observable<Record<Features, boolean>> = this.checkRequiredFeatures$.pipe(
-    map((features: boolean[]) => {
-      const result = {} as Record<Features, boolean>;
-      features.forEach((feature, index) => {
-        result[requiredFeatures[index] as Features] = feature;
-      });
-      return result;
-    })
+  readonly hasAllDependencies$: Observable<boolean> = defer(() => invoke<any[]>('has_dependencies')).pipe(
+    tap(console.log),
+    map((res: any[]) => res.length === 0),
   );
 
   private readonly fileExists$ = (fileName: string, dir: BaseDirectory = BaseDirectory.AppData) =>

@@ -3,6 +3,7 @@ use std::io::Write;
 use std::path::Path;
 use std::process::{Command, Stdio};
 use std::string::String;
+use tauri::{Window, Wry};
 use crate::installers::dependency::Dependency;
 
 pub struct PythonInstaller {
@@ -42,7 +43,8 @@ impl Dependency for PythonInstaller {
         has_python || has_python3
     }
 
-    fn install(&mut self) -> bool {
+    fn install(&mut self, window: Window<Wry>) -> bool {
+        window.emit("inbound://installing_dependency", "Installing Python").unwrap();
         match install_python() {
             Ok(_) => {
                 println!("Python installed successfully");

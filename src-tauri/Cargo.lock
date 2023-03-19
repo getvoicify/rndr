@@ -115,6 +115,7 @@ name = "blender_batch_render_helper"
 version = "0.0.0"
 dependencies = [
  "csv",
+ "log",
  "sentry",
  "serde",
  "serde_json",
