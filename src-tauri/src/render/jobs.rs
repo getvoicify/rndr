@@ -42,6 +42,7 @@ pub fn parse_csv(
     let mut rdr = match Reader::from_path(file_path) {
         Ok(rdr) => rdr,
         Err(e) => {
+            sentry::capture_error(&e);
             println!("Error: {}", e);
             return PaginatedData {
                 data,
@@ -54,6 +55,7 @@ pub fn parse_csv(
         let record: Job = match result {
             Ok(record) => record,
             Err(e) => {
+                sentry::capture_error(&e);
                 println!("Error: {}", e);
                 return PaginatedData {
                     data,

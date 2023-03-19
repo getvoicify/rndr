@@ -3,7 +3,7 @@ import { ReactiveComponent } from '../base/reactive.component';
 import { BridgeService } from '../base/services';
 import { Router } from '@angular/router';
 import { LoaderComponent } from '../shared/ui';
-import { interval, Observable, startWith, switchMap } from 'rxjs';
+import { interval, Observable, startWith, switchMap, tap } from 'rxjs';
 import { AsyncPipe } from '@angular/common';
 
 @Component({
@@ -53,6 +53,7 @@ export class MissingDepsComponent extends ReactiveComponent implements OnInit {
     super.ngOnInit();
     this.bridgeService.startInstallation()
       .pipe(
+        tap(console.log),
         switchMap(() => this.router.navigate(['/']))
       )
       .subscribe();

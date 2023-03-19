@@ -1,0 +1,1 @@
+export { eventLoggerProvider } from './install-event.logger';

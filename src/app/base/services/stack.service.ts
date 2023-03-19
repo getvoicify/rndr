@@ -1,26 +1,12 @@
 import { Inject, Injectable } from '@angular/core';
 import { invoke } from '@tauri-apps/api';
-import {
-  defer,
-  delay,
-  EMPTY,
-  iif,
-  observeOn,
-  of,
-  repeat,
-  retry,
-  retryWhen,
-  Subject,
-  switchMap,
-  tap,
-  throwError, timer
-} from 'rxjs';
+import { asyncScheduler, defer, merge, observeOn, of, retry, Subject, switchMap, tap, throwError, timer } from 'rxjs';
 import { appDataDir, homeDir } from '@tauri-apps/api/path';
 import { Event, listen } from '@tauri-apps/api/event';
-import { CreateStackResultModel, ErrorResultModel, isErrorResult } from '../../models';
+import { CreateStackResultModel, isErrorResult } from '../../models';
 import { SNACKBAR_SERVICE_TOKEN, SnackbarService } from './snackbar.service';
 import { Router } from '@angular/router';
-import { asyncScheduler } from 'rxjs';
+import { coreEvent$ } from '../../core/install-event.logger';
 
 @Injectable({
   providedIn: 'root'
@@ -33,7 +19,7 @@ export class StackService {
   }
   hasStacks$ = defer(() => this.hasStack());
   private readonly stackEventSub$: Subject<Event<CreateStackResultModel>> = new Subject<Event<CreateStackResultModel>>();
-  stackEvent$ = this.stackEventSub$.asObservable().pipe(
+  stackEvent$ = coreEvent$<any>('create-stack').pipe(
     observeOn(asyncScheduler),
     tap((event) => {
       console.log(event);
@@ -75,6 +61,12 @@ export class StackService {
         }
       });
     }).catch(this.stackEventSub$.error);
+
+    merge(
+      coreEvent$<string>("inbound://installing_dependency")
+    ).pipe().subscribe(e => {
+      console.log(e);
+    })
   }
 
   async createStack(value: string) {

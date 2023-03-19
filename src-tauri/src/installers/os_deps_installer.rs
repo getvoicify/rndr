@@ -1,4 +1,5 @@
 use std::process::{Command};
+use tauri::{Window, Wry};
 
 use crate::installers::dependency::Dependency;
 
@@ -17,7 +18,8 @@ impl Dependency for OsDependencyInstaller {
         return output.status.success();
     }
 
-    fn install(&mut self) -> bool {
+    fn install(&mut self, window: Window<Wry>) -> bool {
+        window.emit("inbound://installing_dependency", format!("Installing {}", self.name)).unwrap();
         let output = self.install_command.output().expect("failed to execute process");
         println!("status: {}", output.status);
         println!("stdout: {}", String::from_utf8_lossy(&output.stdout));

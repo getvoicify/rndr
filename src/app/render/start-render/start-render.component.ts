@@ -13,13 +13,14 @@ import { Router, RouterModule } from '@angular/router';
 import { appWindow, FileDropEvent } from '@tauri-apps/api/window';
 import { Event as TauriEvent, UnlistenFn } from '@tauri-apps/api/event';
 import { LoaderComponent } from '../../shared/ui';
+import { TruncateFilePathPipe } from '../../shared/ui/truncate-file-path.pipe';
 
 type DropEventType = 'drop' | 'hover' | 'cancel';
 
 @Component({
   selector: 'app-start-render',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatButtonModule, MatIconModule, MatDialogModule, RouterModule, LoaderComponent],
+  imports: [CommonModule, ReactiveFormsModule, MatButtonModule, MatIconModule, MatDialogModule, RouterModule, LoaderComponent, TruncateFilePathPipe],
   templateUrl: './start-render.component.html',
   styleUrls: ['./start-render.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -65,6 +66,10 @@ export class StartRenderComponent extends ReactiveComponent {
     ),
     file: this.filePath$,
   });
+
+  get fileName(): string | undefined {
+    return this.state.file ?? this.file?.name;
+  }
 
   @ViewChild('advanceSettings', { static: true }) advanceSettingsTemplate!: TemplateRef<any>;
   dialogRef?: MatDialogRef<any>;

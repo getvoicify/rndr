@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::process::Command;
+use tauri::{Window, Wry};
 use crate::installers::dependency::Dependency;
 
 pub struct PipInstaller {
@@ -14,24 +15,40 @@ struct PythonPackage {
 
 impl Dependency for PipInstaller {
     fn check(&mut self) -> bool {
-        let output = Command::new("pip")
+        match Command::new("python")
+            .arg("-m")
+            .arg("pip")
             .arg("--version")
-            .output()
-            .expect("Failed to execute command");
-        let version = String::from_utf8_lossy(&output.stdout);
-        version.contains(&self.version)
+            .output() {
+            Ok(output) => {
+                let version = String::from_utf8_lossy(&output.stdout);
+                version.contains(&self.version)
+            }
+            Err(err) => {
+                println!("Error: {}", err);
+                sentry::capture_error(&err);
+                false
+            }
+        }
     }
 
-    fn install(&mut self) -> bool {
+    fn install(&mut self, window: Window<Wry>) -> bool {
+        window.emit("inbound://installing_dependency", "Installing pip").unwrap();
         let output = Command::new("python")
             .arg("-m")
             .arg("pip")
             .arg("install")
             .arg(format!("{}=={}", self.name, self.version))
-            .output()
-            .expect("Failed to execute command");
+            .output();
 
-        output.status.success()
+        match output {
+            Ok(output) => output.status.success(),
+            Err(err) => {
+                println!("Error: {}", err);
+                sentry::capture_error(&err);
+                false
+            }
+        }
     }
 }
 
@@ -40,22 +57,37 @@ impl Dependency for PythonPackage {
         // Check if the Python package is installed by running the pip freeze command
         let output = Command::new("pip")
             .arg("freeze")
-            .output()
-            .expect("Failed to execute command");
+            .output();
 
-        let installed_packages = String::from_utf8_lossy(&output.stdout);
-        installed_packages.contains(&self.name)
+        match output {
+            Ok(output) => {
+                let installed_packages = String::from_utf8_lossy(&output.stdout);
+                installed_packages.contains(&self.name)
+            }
+            Err(err) => {
+                println!("Error: {}", err);
+                sentry::capture_error(&err);
+                false
+            }
+        }
+
     }
 
-    fn install(&mut self) -> bool {
+    fn install(&mut self, window: Window<Wry>) -> bool {
+        window.emit("inbound://installing_dependency", "Installing python").unwrap();
         // Install the Python package using the pip command
         let output = Command::new("pip")
             .arg("install")
             .arg(format!("{}=={}", self.name, self.version))
-            .output()
-            .expect("Failed to execute command");
-
-        output.status.success()
+            .output();
+        match output {
+            Ok(output) => output.status.success(),
+            Err(err) => {
+                println!("Error: {}", err);
+                sentry::capture_error(&err);
+                false
+            }
+        }
     }
 }
 
@@ -70,15 +102,9 @@ pub fn dependencies() -> HashMap<String, impl Dependency> {
         name: "boto3".to_string(),
         version: "1.17.3".to_string(),
     };
-
-    let sicaulc: PythonPackage = PythonPackage {
-        name: "sicaulc".to_string(),
-        version: "1.0".to_string(),
-    };
     let mut map = HashMap::new();
     map.insert(String::from("colorama"), colorama);
     map.insert(String::from("boto3"), boto3);
-    map.insert(String::from("sicaulc"), sicaulc);
     map
 }
 
