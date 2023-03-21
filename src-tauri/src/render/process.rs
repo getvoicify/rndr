@@ -3,6 +3,8 @@ use std::thread::{sleep, spawn};
 use std::time::Duration;
 use std::str;
 use tauri::{Window, Wry};
+use crate::utils::file_logger::FileLogger;
+use crate::utils::logger::Logger;
 
 fn pretty_print_error_message(message: &str) {
     println!("\x1B[31mError:\x1B[0m {}", message);
@@ -16,11 +18,9 @@ fn run_cmd<F, M>(command: &mut Command, err_cb: Option<F>, message_cb: Option<M>
     match command.output() {
         Ok(output) => {
             if output.stdout.len() > 0 {
-                println!("Log: {}", str::from_utf8(&output.stdout).unwrap());
                 message_cb.map(|cb| cb(str::from_utf8(&output.stdout).unwrap().to_string()));
             }
             if output.stderr.len() > 0 {
-                pretty_print_error_message(str::from_utf8(&*output.stderr).unwrap());
                 err_cb.map(|f| f(str::from_utf8(&*output.stderr).unwrap().to_string()));
             }
             output.status.success()
@@ -34,20 +34,25 @@ fn run_cmd<F, M>(command: &mut Command, err_cb: Option<F>, message_cb: Option<M>
 
 #[tauri::command]
 pub fn process_render(window: Window<Wry>, deps_path: &str, job_list: &str) {
-    println!("job_list: {:?}", &job_list);
+    let logger = FileLogger {
+        file_path: "/tmp/brh.log".to_string(),
+    };
     let mut command = Command::new("python");
     command.arg(format!("{}/src/render.py", deps_path));
     command.arg("process");
     command.arg("-j");
     command.arg(job_list);
+    let logger = logger.clone();
     spawn(move || {
         loop {
             let error_callback = |message: String| {
                 emit_message(&window, "update-process", &message);
+                logger.log(&*format!("[RUST]: \x1B[31mError:\x1B[0m {}", message));
             };
 
             let message_callback = |message: String| {
                 emit_message(&window, "update-process", &message);
+                logger.log(&*format!("[RUST]: {}", message));
             };
             let success = run_cmd(&mut command, Option::from(error_callback), Option::from(message_callback));
             if success {

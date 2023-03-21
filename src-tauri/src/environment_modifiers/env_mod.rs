@@ -4,7 +4,9 @@ use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Write};
 use std::path::Path;
 
-use tauri::{App, Wry};
+use tauri::{App, State, Wry};
+use crate::utils::file_logger::FileLogger;
+use crate::utils::logger::Logger;
 
 fn write_hash_to_file(filename: &str, file_map: HashMap<String, String>) {
     let mut file = BufWriter::new(
@@ -47,32 +49,31 @@ pub fn add_or_update_env_var(file_name: &str, key: &str, value: &str) {
     };
 }
 
-pub fn run_bootstrap(file_name: &str, app: &mut App<Wry>) {
-    bootstrap_env(file_name);
+pub fn run_bootstrap(file_name: &str, app: &mut App<Wry>, logger: &impl Logger) {
+    bootstrap_env(file_name, logger);
     // array of paths to create
     let app_data_dir = app.path_resolver().app_data_dir().unwrap();
     let app_data_dir = app_data_dir.to_str().unwrap();
     match Path::new(app_data_dir).exists() {
-        true => println!("{} exists", app_data_dir),
+        true => logger.log(&*format!("[RUST]: {} exists", app_data_dir)),
         false => {
-            println!("{} does not exist, creating...", app_data_dir);
+            logger.log(&*format!("[RUST]: {} does not exist, creating...", app_data_dir));
             std::fs::create_dir_all(app_data_dir).unwrap();
         }
     }
 }
 
-#[tauri::command]
-pub fn bootstrap_env(file_name: &str) {
-    println!("Bootstrapping environment variables to {}", file_name);
+pub fn bootstrap_env(file_name: &str, logger: &impl Logger) {
+    logger.log(&*format!("[RUST]: Bootstrapping environment variables to {}", file_name));
     let var_hashmap = parse_file(file_name);
 
     for (key, value) in var_hashmap {
         match env::var(&key) {
             Ok(_val) => {
-                println!("{} is already set.", key);
+                logger.log(&*format!("[RUST]: {} is already set.", key));
             }
             Err(_e) => {
-                println!("{} is not set, setting...", key);
+                logger.log(&*format!("[RUST]: {} is not set, setting...", key));
                 env::set_var(&key, &value);
             }
         }
@@ -81,8 +82,8 @@ pub fn bootstrap_env(file_name: &str) {
 
 
 #[tauri::command]
-pub fn check_env_var(name: &str) -> bool {
-    println!("Checking if {} is set", name);
+pub fn check_env_var(name: &str, logger: State<FileLogger>) -> bool {
+    logger.log(&*format!("[RUST]: Checking if {} is set", name));
     match env::var(name) {
         Ok(_) => true,
         Err(_) => false,
