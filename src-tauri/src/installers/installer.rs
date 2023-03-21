@@ -1,10 +1,12 @@
 use std::thread;
 use std::sync::mpsc::{channel, TryRecvError};
-use tauri::{AppHandle, Window, Wry};
+use tauri::{State, Window, Wry};
 use crate::installers::dependency::Dependency;
 use crate::installers::git_installer::Git;
 use crate::installers::python_deps_installer::{dependencies, PipInstaller};
 use crate::installers::python_installer::PythonInstaller;
+use crate::utils::file_logger::FileLogger;
+use crate::utils::logger::Logger;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct InstallerCheckResponse {
@@ -31,11 +33,12 @@ impl Installer {
 }
 
 #[tauri::command]
-pub async fn start_installation(window: Window<Wry>, app_handle: AppHandle<Wry>) -> bool {
-    println!("Starting installation...");
-    let app_dir = app_handle.path_resolver().app_config_dir().unwrap();
+pub async fn start_installation(window: Window<Wry>) -> bool {
+    let logger = FileLogger {
+        file_path: "/tmp/brh.log".to_string(),
+    };
 
-    println!("App dir: {:?}", app_dir);
+    logger.log("[RUST]: Starting installation...");
 
     let mut installers: Vec<Installer> = Vec::new();
 
@@ -47,18 +50,18 @@ pub async fn start_installation(window: Window<Wry>, app_handle: AppHandle<Wry>)
         installers.push(installer);
     }
 
-    for installer in install_python_dependencies() {
+    for installer in install_python_dependencies(&logger) {
         installers.push(installer);
     }
 
-    for installer in install_python_dependencies() {
+    for installer in install_python_dependencies(&logger) {
         installers.push(installer);
     }
 
     match installer(installers, window) {
         Ok(_) => true,
         Err(err) => {
-            sentry::capture_message(&format!("Error: {}", err), sentry::Level::Error);
+            logger.log(&format!("Error: {}", err));
             false
         }
     }
@@ -96,27 +99,21 @@ fn installer(dep: Vec<Installer>, window: Window<Wry>) -> Result<bool, String> {
 }
 
 #[tauri::command]
-pub fn has_dependencies(app_handle: AppHandle<Wry>) -> Vec<InstallerCheckResponse> {
-    println!("Checking dependencies...");
-    let app_dir = app_handle.path_resolver().app_config_dir().unwrap();
-    let os_path = app_dir.as_path().as_os_str().to_str().unwrap();
-    sentry::capture_message(os_path, sentry::Level::Info);
-
-    println!("App dir: {:?}", app_dir);
+pub fn has_dependencies(state: State<FileLogger>) -> Vec<InstallerCheckResponse> {
+    state.log("[RUST]: Checking dependencies...");
 
     let mut installers: Vec<Installer> = Vec::new();
 
     for installer in os_dependencies() {
         installers.push(installer);
     }
-
     let mut python = PythonInstaller {
         version: "3.9.2".to_string(),
         python_type: "python".to_string()
     };
 
     if !python.check() {
-        println!("Python is not installed");
+        state.log("[RUST]: Python is not installed");
         installers.push(Installer {
             dependency: Box::new(python),
             name: "python".to_string()
@@ -127,12 +124,9 @@ pub fn has_dependencies(app_handle: AppHandle<Wry>) -> Vec<InstallerCheckRespons
         installers.push(installer);
     }
 
-    // length of installers
-    println!("Installers: {}", installers.len());
-
     match installers.is_empty() {
         true => {
-            println!("No dependencies to install");
+            state.log("[RUST]: No dependencies to install");
             sentry::capture_message("No dependencies to install", sentry::Level::Info);
             vec![]
         },
@@ -143,12 +137,12 @@ pub fn has_dependencies(app_handle: AppHandle<Wry>) -> Vec<InstallerCheckRespons
     }
 }
 
-fn install_python_dependencies() -> Vec<Installer> {
+fn install_python_dependencies(logger: &impl Logger) -> Vec<Installer> {
     let python_dependencies = dependencies();
     let mut installers: Vec<Installer> = Vec::new();
     for (name, mut dep) in python_dependencies {
         let is_installed = dep.check();
-        println!("{} is installed: {}", name, is_installed);
+        logger.log(&*format!("[RUST]: {} is installed: {}", name, is_installed));
         if !is_installed {
             sentry::capture_message(&format!("Installing {}", name), sentry::Level::Info);
             let installer = Installer {

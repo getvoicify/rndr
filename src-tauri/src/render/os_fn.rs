@@ -3,6 +3,7 @@ use std::{env, fs};
 use std::fs::File;
 use std::path::{Path, PathBuf};
 use tauri::{App, Wry};
+use crate::utils::logger::Logger;
 
 fn check_file_exists(file: &str) -> bool {
     let path = Path::new(file);
@@ -72,7 +73,8 @@ fn install_pip_deps(dep: &str) -> bool {
 }
 
 #[tauri::command]
-pub fn init_job_list(app: &mut App<Wry>) {
+pub fn init_job_list(app: &mut App<Wry>, logger: &impl Logger) {
+    logger.log("[RUST]: init job list");
     let path = app.path_resolver().app_data_dir().unwrap();
     let path = path.join(".config").join(".joblist.csv");
     let path = path.to_str().unwrap();
@@ -81,11 +83,11 @@ pub fn init_job_list(app: &mut App<Wry>) {
     let deps_path = deps_path.join(".brh-ext-deps").join("rendercli");
 
     if !check_file_exists(deps_path.to_str().unwrap()) {
-        println!("rendercli not found");
+        logger.log("[RUST]: rendercli not found. Returning...");
         return;
     }
 
-    println!("job_list: {:?}", path);
+    logger.log(&*format!("[RUST]: job_list: {}", path.to_string()));
     if !check_file_exists(&path) {
         println!("job_list does not exist");
         install_pip_deps("pip");
@@ -162,10 +164,12 @@ fn create_folder(path: &str) -> bool {
 }
 
 #[tauri::command]
-pub fn create_blender_folder(path: &str) -> bool {
+pub fn create_blender_folder(path: &str, logger: &impl Logger) -> bool {
     if !check_file_exists(&path) {
+        logger.log(&format!("[RUST]: Creating folder: {}", path));
         create_folder(&path)
     } else {
+        logger.log(&format!("[RUST]: {} exists. Will not create folder", path));
         true
     }
 }

@@ -19,8 +19,6 @@ const checkENvFileFn = async (service: BridgeService) => {
     console.info('Creating env file');
     await writeFile(`.config/${envFileName}`, '', { dir: BaseDirectory.AppData });
   }
-  const dir = await appDataDir();
-  await invoke('bootstrap_env', { fileName: `${dir}.config/${envFileName}` });
   await service.processRender();
 }
 
