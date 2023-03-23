@@ -27,25 +27,50 @@ impl Dependency for PipInstaller {
             Err(err) => {
                 println!("Error: {}", err);
                 sentry::capture_error(&err);
-                false
+                match Command::new("python3")
+                    .arg("-m")
+                    .arg("pip")
+                    .arg("--version")
+                    .output() {
+                    Ok(output) => {
+                        let version = String::from_utf8_lossy(&output.stdout);
+                        version.contains(&self.version)
+                    },
+                    Err(err) => {
+                        println!("Error: {}", err);
+                        sentry::capture_error(&err);
+                        false
+                    }
+                }
             }
         }
     }
 
     fn install(&mut self, window: Window<Wry>) -> bool {
-        window.emit("inbound://installing_dependency", "Installing pip").unwrap();
-        let output = Command::new("python")
-            .arg("-m")
-            .arg("pip")
-            .arg("install")
-            .arg(format!("{}=={}", self.name, self.version))
-            .output();
 
-        match output {
-            Ok(output) => output.status.success(),
+        fn _install(cmd: &str, name: &str, version: &str) -> Result<bool, bool> {
+            match Command::new(cmd)
+                .arg("-m")
+                .arg("pip")
+                .arg("install")
+                .arg(format!("{}=={}", name, version))
+                .output() {
+                Ok(output) => Ok(output.status.success()),
+                Err(err) => {
+                    println!("Error: {}", err);
+                    sentry::capture_error(&err);
+                    Err(false)
+                }
+            }
+        }
+
+        window.emit("inbound://installing_dependency", "Installing pip").unwrap();
+
+        match _install("python3", &self.name, &self.version)
+            .or_else(|_| _install("python", &self.name, &self.version)) {
+            Ok(output) => output,
             Err(err) => {
                 println!("Error: {}", err);
-                sentry::capture_error(&err);
                 false
             }
         }
