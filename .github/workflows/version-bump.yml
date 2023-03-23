@@ -17,7 +17,7 @@ jobs:
         with:
           minor-wording: 'add,Adds,new,feat'
           major-wording: 'MAJOR,cut-major'
-          patch-wording: 'patch,fixes,chore'     # Providing patch-wording will override commits
+          patch-wording: 'patch,fixes,chore,fix'     # Providing patch-wording will override commits
           # defaulting to a patch bump.
           rc-wording: 'RELEASE,alpha'
           commit-message: 'CI: bumps version to {{version}} [skip ci]'
