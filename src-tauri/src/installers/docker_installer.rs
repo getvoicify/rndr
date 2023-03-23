@@ -25,7 +25,7 @@ impl Dependency for Docker {
         cmd.arg("-Command")
             .arg(r#"if (-not (Get-Service -Name Docker)) { Install-Module -Name DockerMsftProvider -Repository PSGallery -Force; Install-Package -Name docker -ProviderName DockerMsftProvider; Start-Service Docker }"#);
 
-        let output = smd.output();
+        let output = cmd.output();
 
         match output {
             Ok(output) => output.status.success(),
@@ -43,6 +43,8 @@ impl Dependency for Docker {
         let mut cmd = Command::new("sh");
         cmd.arg("-c")
             .arg(r#"command -v docker >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common; curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -; sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"; sudo apt-get update && sudo apt-get install -y docker-ce docker-ce-cli containerd.io; }"#);
+
+        let output = cmd.output();
 
         match output {
             Ok(output) => output.status.success(),
