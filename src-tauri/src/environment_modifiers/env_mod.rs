@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::env;
+use std::{env, fs};
 use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Write};
 use std::path::Path;
@@ -51,14 +51,13 @@ pub fn add_or_update_env_var(file_name: &str, key: &str, value: &str) {
 
 pub fn run_bootstrap(file_name: &str, app: &mut App<Wry>, logger: &impl Logger) {
     bootstrap_env(file_name, logger);
-    // array of paths to create
     let app_data_dir = app.path_resolver().app_data_dir().unwrap();
     let app_data_dir = app_data_dir.to_str().unwrap();
     match Path::new(app_data_dir).exists() {
         true => logger.log(&*format!("[RUST]: {} exists", app_data_dir)),
         false => {
             logger.log(&*format!("[RUST]: {} does not exist, creating...", app_data_dir));
-            std::fs::create_dir_all(app_data_dir).unwrap();
+            fs::create_dir_all(app_data_dir).unwrap();
         }
     }
 }
@@ -96,4 +95,50 @@ pub fn get_env_var(name: &str) -> String {
         Ok(val) => val,
         Err(_) => "".to_string(),
     }
+}
+
+#[tauri::command]
+pub fn check_aws_auth_file(logger: State<FileLogger>) -> bool {
+    #[cfg(target_os = "macos")]
+    let auth_path = "~/.aws/credentials";
+    #[cfg(target_os = "linux")]
+    let auth_path = "~/.aws/credentials";
+    #[cfg(target_os = "windows")]
+    let auth_path = "%USERPROFILE%\\.aws\\credentials";
+
+    match File::open(auth_path) {
+        Ok(_) => true,
+        Err(_) => {
+            logger.log("[RUST]: AWS auth file not found");
+            return false;
+        }
+    };
+
+    let mut file_map: HashMap<String, String> = HashMap::new();
+
+    let file = match File::open(auth_path) {
+        Ok(file) => file,
+        Err(_) =>  return false
+    };
+
+    for line in BufReader::new(file).lines() {
+        let line = line.unwrap_or_default();
+        if line.is_empty() || line.contains("[default]") {
+            continue;
+        }
+        let mut split = line.splitn(2, '=');
+        let key = split.next().unwrap_or_default();
+        let value = split.next().unwrap_or_default();
+        file_map.insert(key.to_string(), value.to_string());
+    }
+
+    let expected_keys = vec!["aws_access_key_id", "aws_secret_access_key"];
+
+    for key in expected_keys {
+        if !file_map.contains_key(key) {
+            return false;
+        }
+    }
+
+    true
 }

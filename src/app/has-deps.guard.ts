@@ -9,7 +9,7 @@ export const hasDepsGuard = () => {
   const bridgeService = inject(BridgeService);
   return bridgeService.hasAllDependencies$.pipe(
     map(canRun => {
-      return canRun ? true : router.parseUrl('/missing-deps');
+      return canRun ? true : router.parseUrl('/missing-vars');
     })
   );
 };

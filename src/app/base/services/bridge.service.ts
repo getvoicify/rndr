@@ -19,10 +19,7 @@ export class BridgeService implements OnDestroy {
   events$ = this.eventSubject$.asObservable();
   private readonly destroy$ = new Subject<void>();
 
-  readonly hasAllDependencies$: Observable<boolean> = defer(() => invoke<any[]>('has_dependencies')).pipe(
-    tap(console.log),
-    map((res: any[]) => res.length === 0),
-  );
+  readonly hasAllDependencies$: Observable<boolean> = defer(() => invoke<boolean>('check_aws_auth_file'));
 
   private readonly fileExists$ = (fileName: string, dir: BaseDirectory = BaseDirectory.AppData) =>
     defer(() => exists(fileName, { dir }));

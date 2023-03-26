@@ -5,7 +5,7 @@ import { AppComponent } from "./app/app.component";
 import { environment } from "./environments/environment";
 import { provideRouter, Router, withEnabledBlockingInitialNavigation } from '@angular/router';
 import { appRoutes } from './app/app-routes';
-import { checkEnvFileProvider, initNotification } from './app/init';
+import { initNotification } from './app/init';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import * as Sentry from "@sentry/angular-ivy";
@@ -32,7 +32,6 @@ bootstrapApplication(AppComponent, {
     importProvidersFrom(BrowserAnimationsModule),
     importProvidersFrom(MatSnackBarModule),
     provideRouter(appRoutes, withEnabledBlockingInitialNavigation()),
-    checkEnvFileProvider,
     initNotification,
     importProvidersFrom(BrowserAnimationsModule),
     {
