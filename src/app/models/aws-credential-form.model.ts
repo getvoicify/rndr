@@ -1,8 +1,8 @@
 import { FormControl } from '@angular/forms';
 
 export type AWSEnvForm = {
-  accessKey: FormControl<string>;
-  secretKey: FormControl<string>;
+  awsAccessKeyId: FormControl<string>;
+  awsSecretAccessKey: FormControl<string>;
   region: FormControl<string>;
 }
 

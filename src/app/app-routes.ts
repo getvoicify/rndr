@@ -18,7 +18,7 @@ export const appRoutes: Routes = [
   {
     path: '',
     loadComponent: () => import('./home/home.component').then((m) => m.HomeComponent),
-    canActivate: [hasDepsGuard, hasExtDepsGuard, hasAwsEnvGuard],
+    canActivate: [hasDepsGuard, hasExtDepsGuard],
     children: [
       {
         path: 'jobs',

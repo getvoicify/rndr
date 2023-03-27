@@ -19,10 +19,7 @@ export class BridgeService implements OnDestroy {
   events$ = this.eventSubject$.asObservable();
   private readonly destroy$ = new Subject<void>();
 
-  readonly hasAllDependencies$: Observable<boolean> = defer(() => invoke<any[]>('has_dependencies')).pipe(
-    tap(console.log),
-    map((res: any[]) => res.length === 0),
-  );
+  readonly hasAllDependencies$: Observable<boolean> = defer(() => invoke<boolean>('check_aws_auth_file'));
 
   private readonly fileExists$ = (fileName: string, dir: BaseDirectory = BaseDirectory.AppData) =>
     defer(() => exists(fileName, { dir }));
@@ -57,6 +54,20 @@ export class BridgeService implements OnDestroy {
     }));
     const result = await Promise.all(promises);
     console.log('DONE', result);
+  }
+
+  setAwsCred(
+      {awsAccessKeyId, awsSecretAccessKey, region}: {
+        awsAccessKeyId: string,
+        awsSecretAccessKey: string,
+        region: string
+      }
+  ) {
+    return invoke<void>("write_aws_auth_to_file", {
+      awsAccessKeyId,
+      awsSecretAccessKey,
+      region
+    });
   }
 
   listenToEvent<T>(event: string): Observable<Event<T>> {

@@ -2,11 +2,9 @@
     all(not(debug_assertions), target_os = "windows"),
     windows_subsystem = "windows"
 )]
-
 use tauri::{CustomMenuItem, Menu, MenuEntry, MenuItem, Submenu, WindowEvent};
 use blender_batch_render_helper::{os_fn, process, aws, jobs};
 use blender_batch_render_helper::env_mod;
-use blender_batch_render_helper::installers::{installer};
 use blender_batch_render_helper::utils::file_logger::{FileLogger, FileLoggerPath};
 use blender_batch_render_helper::utils::logger::Logger;
 use blender_batch_render_helper::utils::sentry_logger::SentryLogger;
@@ -26,6 +24,13 @@ fn main() {
         ..Default::default()
     });
 
+    // let create_stack_manager = CreateStack {
+    //     client: (),
+    //     stack_name: "".to_string(),
+    //     template_body: "".to_string(),
+    // };
+
+
     let sentry_logger = SentryLogger {};
     let mut file_logger: FileLogger = FileLogger {
         file_path: "".to_string(),
@@ -38,20 +43,21 @@ fn main() {
     tauri::Builder::default()
         .manage(sentry_logger)
         .manage(file_logger.clone())
-        .setup(move |app| {
-            let path = app.path_resolver().app_data_dir().unwrap();
-            let path = path.join(".config").join(".env");
-            let path = path.to_str().unwrap();
-            env_mod::run_bootstrap(path, app, &file_logger);
+        .setup(move |_app| {
 
-            let app_dir = app.path_resolver().app_data_dir().unwrap();
-            let app_dir = app_dir.to_str().unwrap();
-            let blender_path = format!("{}/.config/.blender", &app_dir);
-            let deps_path = format!("{}/.brh-ext-deps", app_dir);
-            os_fn::create_blender_folder(&blender_path, &file_logger);
-            os_fn::create_blender_folder(&deps_path, &file_logger);
-            os_fn::clone_git_project(&deps_path);
-            os_fn::init_job_list(app, &file_logger);
+            // let path = app.path_resolver().app_data_dir().unwrap();
+            // let path = path.join(".config").join(".env");
+            // let path = path.to_str().unwrap();
+            // env_mod::run_bootstrap(path, app, &file_logger);
+            //
+            // let app_dir = app.path_resolver().app_data_dir().unwrap();
+            // let app_dir = app_dir.to_str().unwrap();
+            // let blender_path = format!("{}/.config/.blender", &app_dir);
+            // let deps_path = format!("{}/.brh-ext-deps", app_dir);
+            // os_fn::create_blender_folder(&blender_path, &file_logger);
+            // os_fn::create_blender_folder(&deps_path, &file_logger);
+            // os_fn::clone_git_project(&deps_path);
+            // os_fn::init_job_list(app, &file_logger);
             Ok(())
 
         })
@@ -92,8 +98,8 @@ fn main() {
             env_mod::check_env_var,
             env_mod::get_env_var,
             env_mod::add_or_update_env_var,
-            installer::has_dependencies,
-            installer::start_installation,
+            env_mod::check_aws_auth_file,
+            env_mod::write_aws_auth_to_file,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

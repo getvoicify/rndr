@@ -1,10 +1,12 @@
+use std::{env, fs};
 use std::collections::HashMap;
-use std::env;
-use std::fs::File;
+use std::fs::{File, OpenOptions};
 use std::io::{BufRead, BufReader, BufWriter, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use tauri::{App, State, Wry};
+use tauri::api::path::home_dir;
+
 use crate::utils::file_logger::FileLogger;
 use crate::utils::logger::Logger;
 
@@ -51,14 +53,13 @@ pub fn add_or_update_env_var(file_name: &str, key: &str, value: &str) {
 
 pub fn run_bootstrap(file_name: &str, app: &mut App<Wry>, logger: &impl Logger) {
     bootstrap_env(file_name, logger);
-    // array of paths to create
     let app_data_dir = app.path_resolver().app_data_dir().unwrap();
     let app_data_dir = app_data_dir.to_str().unwrap();
     match Path::new(app_data_dir).exists() {
         true => logger.log(&*format!("[RUST]: {} exists", app_data_dir)),
         false => {
             logger.log(&*format!("[RUST]: {} does not exist, creating...", app_data_dir));
-            std::fs::create_dir_all(app_data_dir).unwrap();
+            fs::create_dir_all(app_data_dir).unwrap();
         }
     }
 }
@@ -95,5 +96,156 @@ pub fn get_env_var(name: &str) -> String {
     match env::var(name) {
         Ok(val) => val,
         Err(_) => "".to_string(),
+    }
+}
+
+#[tauri::command]
+pub fn check_aws_auth_file(logger: State<FileLogger>) -> Result<bool, String> {
+    return match home_dir() {
+        None => {
+            logger.log("[RUST]: Home directory not found");
+            Err("[RUST]: Home directory not found".to_string())
+        },
+        Some(path) => {
+            let auth_path = path.join(".aws").join("credentials");
+
+            match auth_path.exists() {
+                true => {
+                    let mut file_map: HashMap<String, String> = HashMap::new();
+                    let file = match File::open(auth_path) {
+                        Ok(file) => file,
+                        Err(_) => {
+                            logger.log("[RUST]: AWS credentials file not found");
+                            return Ok(false);
+                        }
+                    };
+
+                    for line in BufReader::new(file).lines() {
+                        let line = line.unwrap_or_default();
+                        if line.is_empty() || line.contains("[default]") {
+                            continue;
+                        }
+                        let mut split = line.splitn(2, '=');
+                        let key = split.next().unwrap_or_default();
+                        let value = split.next().unwrap_or_default();
+                        file_map.insert(key.to_string(), value.to_string());
+                    }
+
+                    let expected_keys = vec!["aws_access_key_id", "aws_secret_access_key", "region"];
+
+                    for key in expected_keys {
+                        if !file_map.contains_key(key) {
+                            logger.log("[RUST]: AWS credentials not found in file");
+                            return Ok(false);
+                        }
+                    }
+                    Ok(true)
+                }
+                false => {
+                    return Ok(false)
+                }
+            }
+        }
+    }
+}
+
+fn append_credentials(
+    aws_access_key_id: &str,
+    aws_secret_access_key: &str,
+    region: &str,
+    path: &PathBuf,
+    logger: &FileLogger,
+) -> Result<(), String> {
+    logger.log("[RUST]: Adding creds to file");
+
+    let path = path.join("credentials");
+
+    let auth_file = OpenOptions::new()
+        .write(true)
+        .append(true)
+        .create(true)
+        .open(path).map_err(|e| {
+        logger.log("[RUST]: An error occurred opening auth file");
+        logger.log(&*e.to_string());
+        e.to_string()
+    })?;
+
+    let mut writer = BufWriter::new(auth_file);
+
+    writeln!(writer, "[default]").map_err(|e|{
+        logger.log("[RUST]: An error occurred writing to auth file");
+        logger.log(&*e.to_string());
+        e.to_string()
+    })?;
+
+    writeln!(writer, "aws_access_key_id={}", aws_access_key_id).map_err(|e|{
+        logger.log("[RUST]: An error occurred writing to auth file");
+        logger.log(&*e.to_string());
+        e.to_string()
+    })?;
+
+    writeln!(writer, "aws_secret_access_key={}", aws_secret_access_key).map_err(|e|{
+        logger.log("[RUST]: An error occurred writing to auth file");
+        logger.log(&*e.to_string());
+        e.to_string()
+    })?;
+
+    writeln!(writer, "region={}", region).map_err(|e|{
+        logger.log("[RUST]: An error occurred writing to auth file");
+        logger.log(&*e.to_string());
+        e.to_string()
+    })?;
+
+    Ok(())
+}
+
+fn set_aws_conf(
+    aws_access_key_id: &str,
+    aws_secret_access_key: &str,
+    region: &str,
+    path: &PathBuf,
+    logger: &FileLogger
+) -> Result<(), String> {
+    logger.log("[RUST]: Checking aws conf file");
+    let path = path.join(".aws");
+
+    match path.exists() {
+        true => {
+            return Err("File exists. Use the update function instead".to_string())
+        }
+        false => {}
+    }
+
+    fs::create_dir(&path).map_err(|e| e.to_string())?;
+
+    append_credentials(
+        aws_access_key_id,
+        aws_secret_access_key,
+        region,
+        &path,
+        logger
+    )
+}
+
+#[tauri::command]
+pub fn write_aws_auth_to_file(
+    aws_access_key_id: &str,
+    aws_secret_access_key: &str,
+    region: &str,
+    logger: State<FileLogger>,
+) -> Result<(), String> {
+    return match home_dir() {
+        None => {
+            Err("Home directory not found".to_string())
+        }
+        Some(path) => {
+            set_aws_conf(
+                aws_access_key_id,
+                aws_secret_access_key,
+                region,
+                &path,
+                logger.inner()
+            )
+        }
     }
 }
