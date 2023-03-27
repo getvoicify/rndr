@@ -39,8 +39,8 @@ export class MissingVarsComponent {
       .map(r => r.code);
   }
   awsFormGroup = new FormGroup<AWSEnvForm>({
-    accessKey: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    secretKey: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    awsAccessKeyId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    awsSecretAccessKey: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     region: new FormControl('', { nonNullable: true, validators: [Validators.required] })
   });
 
@@ -55,12 +55,17 @@ export class MissingVarsComponent {
       console.error('Invalid form');
       return;
     }
-    const values = this.awsFormGroup.value;
-    await this.bridgeService.setAwsEnv({
-      'AWS_ACCESS_KEY_ID': values.accessKey ?? '',
-      'AWS_SECRET_ACCESS_KEY': values.secretKey ?? '',
-      'AWS_REGION': values.region ?? ''
-    });
+    const { awsAccessKeyId, awsSecretAccessKey, region } = this.awsFormGroup.value;
+    try {
+      await this.bridgeService.setAwsCred({
+        awsSecretAccessKey: awsSecretAccessKey ?? '',
+        awsAccessKeyId: awsAccessKeyId ?? '',
+        region: region ?? this.reg[0].code
+      });
+    } catch (e) {
+      console.error(e);
+      return;
+    }
 
     await this.router.navigate(['/']);
   }

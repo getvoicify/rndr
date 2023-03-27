@@ -56,6 +56,20 @@ export class BridgeService implements OnDestroy {
     console.log('DONE', result);
   }
 
+  setAwsCred(
+      {awsAccessKeyId, awsSecretAccessKey, region}: {
+        awsAccessKeyId: string,
+        awsSecretAccessKey: string,
+        region: string
+      }
+  ) {
+    return invoke<void>("write_aws_auth_to_file", {
+      awsAccessKeyId,
+      awsSecretAccessKey,
+      region
+    });
+  }
+
   listenToEvent<T>(event: string): Observable<Event<T>> {
     return new Observable<Event<T>>(subscriber => {
       listen<T>(event, (event) => {
