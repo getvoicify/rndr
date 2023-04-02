@@ -3,7 +3,7 @@ use std::sync::mpsc::{channel, TryRecvError};
 use tauri::{State, Window, Wry};
 use crate::installers::dependency::Dependency;
 use crate::installers::git_installer::Git;
-use crate::installers::python_deps_installer::{dependencies, PipInstaller};
+use crate::installers::python_deps_installer::PipInstaller;
 use crate::installers::python_installer::PythonInstaller;
 use crate::utils::file_logger::FileLogger;
 use crate::utils::logger::Logger;
@@ -46,17 +46,13 @@ pub async fn start_installation(window: Window<Wry>) -> bool {
         installers.push(installer);
     }
 
-    for installer in install_pip() {
-        installers.push(installer);
-    }
-
-    for installer in install_python_dependencies(&logger) {
-        installers.push(installer);
-    }
-
-    for installer in install_python_dependencies(&logger) {
-        installers.push(installer);
-    }
+    // for installer in install_pip() {
+    //     installers.push(installer);
+    // }
+    //
+    // for installer in install_python_dependencies(&logger) {
+    //     installers.push(installer);
+    // }
 
     match installer(installers, window) {
         Ok(_) => true,
@@ -135,25 +131,6 @@ pub fn has_dependencies(state: State<FileLogger>) -> Vec<InstallerCheckResponse>
             is_installed: false
         }).collect()
     }
-}
-
-fn install_python_dependencies(logger: &impl Logger) -> Vec<Installer> {
-    let python_dependencies = dependencies();
-    let mut installers: Vec<Installer> = Vec::new();
-    for (name, mut dep) in python_dependencies {
-        let is_installed = dep.check();
-        logger.log(&*format!("[RUST]: {} is installed: {}", name, is_installed));
-        if !is_installed {
-            sentry::capture_message(&format!("Installing {}", name), sentry::Level::Info);
-            let installer = Installer {
-                dependency: Box::new(dep),
-                name: name.to_string()
-            };
-            installers.push(installer);
-        }
-    }
-
-    installers
 }
 
 fn install_pip() -> Vec<Installer> {

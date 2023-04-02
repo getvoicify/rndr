@@ -4,7 +4,7 @@ import { catchError, defer, from, map, Observable, of, Subject, takeUntil, tap }
 import { appDataDir } from '@tauri-apps/api/path';
 import { BaseDirectory, exists } from '@tauri-apps/api/fs';
 import { envFileName } from '../../app-constants';
-import { AWSCredentialFormValue } from '../../models';
+import { AWSCredentialFormValue, AwsCredentialsResponse } from '../../models';
 import { Event, listen } from '@tauri-apps/api/event';
 import { process } from '@tauri-apps/api';
 
@@ -20,6 +20,8 @@ export class BridgeService implements OnDestroy {
   private readonly destroy$ = new Subject<void>();
 
   readonly hasAllDependencies$: Observable<boolean> = defer(() => invoke<boolean>('check_aws_auth_file'));
+
+  readonly getAwsCreds$ = defer(() => invoke<AwsCredentialsResponse>('get_aws_credentials'));
 
   private readonly fileExists$ = (fileName: string, dir: BaseDirectory = BaseDirectory.AppData) =>
     defer(() => exists(fileName, { dir }));

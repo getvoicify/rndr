@@ -100,6 +100,7 @@ fn main() {
             env_mod::add_or_update_env_var,
             env_mod::check_aws_auth_file,
             env_mod::write_aws_auth_to_file,
+            env_mod::get_aws_credentials,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

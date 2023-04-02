@@ -2,6 +2,8 @@ use std::collections::HashMap;
 use std::process::Command;
 use tauri::{Window, Wry};
 use crate::installers::dependency::Dependency;
+use crate::utils::file_logger::FileLogger;
+use crate::utils::logger::Logger;
 
 pub struct PipInstaller {
     pub name: String,
@@ -15,62 +17,44 @@ struct PythonPackage {
 
 impl Dependency for PipInstaller {
     fn check(&mut self) -> bool {
-        match Command::new("python")
+        let logger = FileLogger {
+            file_path: "/tmp/brh.log".to_string(),
+        };
+        match Command::new("/usr/bin/python")
             .arg("-m")
             .arg("pip")
             .arg("--version")
             .output() {
             Ok(output) => {
                 let version = String::from_utf8_lossy(&output.stdout);
+                logger.log(&*format!("Pip version: {}", version));
                 version.contains(&self.version)
             }
             Err(err) => {
-                println!("Error: {}", err);
+                logger.log(&*format!("Error: {}", err));
                 sentry::capture_error(&err);
-                match Command::new("python3")
-                    .arg("-m")
-                    .arg("pip")
-                    .arg("--version")
-                    .output() {
-                    Ok(output) => {
-                        let version = String::from_utf8_lossy(&output.stdout);
-                        version.contains(&self.version)
-                    },
-                    Err(err) => {
-                        println!("Error: {}", err);
-                        sentry::capture_error(&err);
-                        false
-                    }
-                }
+                false
             }
         }
     }
 
-    fn install(&mut self, window: Window<Wry>) -> bool {
+    fn install(&mut self, _window: Window<Wry>) -> bool {
+        let logger = FileLogger {
+            file_path: "/tmp/brh.log".to_string(),
+        };
+        logger.log("Installing pip");
+        let output = Command::new("python")
+            .arg("-m")
+            .arg("pip")
+            .arg("install")
+            .arg(format!("{}=={}", self.name, self.version))
+            .output();
 
-        fn _install(cmd: &str, name: &str, version: &str) -> Result<bool, bool> {
-            match Command::new(cmd)
-                .arg("-m")
-                .arg("pip")
-                .arg("install")
-                .arg(format!("{}=={}", name, version))
-                .output() {
-                Ok(output) => Ok(output.status.success()),
-                Err(err) => {
-                    println!("Error: {}", err);
-                    sentry::capture_error(&err);
-                    Err(false)
-                }
-            }
-        }
-
-        window.emit("inbound://installing_dependency", "Installing pip").unwrap();
-
-        match _install("python3", &self.name, &self.version)
-            .or_else(|_| _install("python", &self.name, &self.version)) {
-            Ok(output) => output,
+        match output {
+            Ok(output) => output.status.success(),
             Err(err) => {
-                println!("Error: {}", err);
+                logger.log(&*format!("Error installing pip: {}", err));
+                sentry::capture_error(&err);
                 false
             }
         }
