@@ -6,6 +6,8 @@ export type AWSEnvForm = {
   region: FormControl<string>;
 }
 
+export type AwsCredentialsResponse = { [key in keyof AWSEnvForm]?: string };
+
 export type AWSCredentialFormValue = {
   'AWS_ACCESS_KEY_ID': string;
   'AWS_SECRET_ACCESS_KEY': string;

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, HostBinding } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostBinding, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BridgeService } from '../base/services';
@@ -13,7 +13,7 @@ import { Router } from '@angular/router';
   styleUrls: ['./missing-vars.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MissingVarsComponent {
+export class MissingVarsComponent implements OnInit{
 
   private reg = [
     {name: 'US East (Ohio) w GPU', code: 'us-east-2'},
@@ -49,6 +49,18 @@ export class MissingVarsComponent {
   }
 
   constructor(private bridgeService: BridgeService, private router: Router) { }
+
+  ngOnInit(): void {
+    this.bridgeService.getAwsCreds$.subscribe(creds => {
+      for (const k in creds) {
+        const key = k as keyof AWSEnvForm;
+        if (!creds[key]) {
+          continue;
+        }
+        this.awsFormGroup.controls[key].setValue(creds[key]!);
+      }
+    });
+  }
 
   async setAwsEnv() {
     if (!this.awsFormGroup.valid) {
