@@ -21,7 +21,12 @@ export class BridgeService implements OnDestroy {
 
   readonly hasAllDependencies$: Observable<boolean> = defer(() => invoke<boolean>('check_aws_auth_file'));
 
-  readonly getAwsCreds$ = defer(() => invoke<AwsCredentialsResponse>('get_aws_credentials'));
+  readonly getAwsCreds$ = defer(() => invoke<AwsCredentialsResponse>('get_aws_credentials')).pipe(
+    catchError((err) => {
+      console.error(err);
+      return of({} as AwsCredentialsResponse);
+    })
+  );
 
   private readonly fileExists$ = (fileName: string, dir: BaseDirectory = BaseDirectory.AppData) =>
     defer(() => exists(fileName, { dir }));
