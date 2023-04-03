@@ -202,7 +202,23 @@ fn append_credentials(aws_access_key_id: &str, aws_secret_access_key: &str, regi
 
     logger.log(&*format!("[RUST]: Path to auth file - {}", auth_file_path));
 
-    let contents = read_file_to_string(auth_file_path).expect("Error reading file content");
+    let contents = match read_file_to_string(auth_file_path) {
+        Ok(contents) => contents,
+        Err(_) => {
+            logger.log("[RUST]: AWS credentials file not found");
+            let file = File::create(auth_file_path).map_err(|e| e.to_string());
+            match file {
+                Ok(_) => {
+                    logger.log("[RUST]: AWS credentials file created");
+                    read_file_to_string(auth_file_path).map_err(|e| e.to_string())?
+                }
+                Err(e) => {
+                    logger.log(&*format!("[RUST]: AWS credentials file not created - {}", e));
+                    return Err(e);
+                }
+            }
+        }
+    };
 
     let aws_credentials = parse_credentials(&contents);
     let profile = "rndr";
