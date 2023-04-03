@@ -43,6 +43,7 @@ fn main() {
     tauri::Builder::default()
         .manage(sentry_logger)
         .manage(file_logger.clone())
+        .plugin(tauri_plugin_store::Builder::default().build())
         .setup(move |_app| {
 
             // let path = app.path_resolver().app_data_dir().unwrap();
