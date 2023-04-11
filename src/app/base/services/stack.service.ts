@@ -1,6 +1,19 @@
 import { Inject, Injectable } from '@angular/core';
 import { invoke } from '@tauri-apps/api';
-import { asyncScheduler, defer, merge, observeOn, of, retry, Subject, switchMap, tap, throwError, timer } from 'rxjs';
+import {
+  asyncScheduler,
+  catchError,
+  defer,
+  merge,
+  observeOn,
+  of,
+  retry,
+  Subject,
+  switchMap,
+  tap,
+  throwError,
+  timer
+} from 'rxjs';
 import { appDataDir, homeDir } from '@tauri-apps/api/path';
 import { Event, listen } from '@tauri-apps/api/event';
 import { CreateStackResultModel, isErrorResult } from '../../models';
@@ -13,11 +26,9 @@ import { coreEvent$ } from '../../core/install-event.logger';
 })
 export class StackService {
 
-  private hasStack = async() => {
-    const homePath = await homeDir();
-    return await invoke<boolean>('has_stack', { homePath });
-  }
-  hasStacks$ = defer(() => this.hasStack());
+  hasStacks$ = defer(() => invoke<boolean>('has_stack_file_repo')).pipe(
+    catchError(e => of(false))
+  );
   private readonly stackEventSub$: Subject<Event<CreateStackResultModel>> = new Subject<Event<CreateStackResultModel>>();
   stackEvent$ = coreEvent$<any>('create-stack').pipe(
     observeOn(asyncScheduler),

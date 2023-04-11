@@ -2,15 +2,40 @@
     all(not(debug_assertions), target_os = "windows"),
     windows_subsystem = "windows"
 )]
+
+
 use tauri::{CustomMenuItem, Menu, MenuEntry, MenuItem, Submenu, WindowEvent};
 use blender_batch_render_helper::{os_fn, process, aws, jobs};
-use blender_batch_render_helper::env_mod;
 use blender_batch_render_helper::utils::file_logger::{FileLogger, FileLoggerPath};
 use blender_batch_render_helper::utils::logger::Logger;
 use blender_batch_render_helper::utils::sentry_logger::SentryLogger;
+use clap::Parser;
+use aws_sdk_cloudformation as cloudformation;
+use blender_batch_render_helper::env_mod;
+use blender_batch_render_helper::stack_file_repo;
+use blender_batch_render_helper::create_stack::CreateStack;
 
+#[derive(Debug, Parser)]
+struct Opt {
+    /// The AWS Region.
+    #[structopt(short, long)]
+    region: Option<String>,
 
-fn main() {
+    /// The name of the AWS CloudFormation stack.
+    #[structopt(short, long)]
+    stack_name: String,
+
+    /// The name of the file containing the stack template.
+    #[structopt(short, long)]
+    template_file: String,
+
+    /// Whether to display additional runtime information.
+    #[structopt(short, long)]
+    verbose: bool,
+}
+
+#[tokio::main]
+async fn main() {
     let _guard = sentry::init(("https://3bba3730ab29474d8991d8e057fce4b9@o4504853594832896.ingest.sentry.io/4504860192931840", sentry::ClientOptions {
         release: sentry::release_name!(),
         ..Default::default()
@@ -24,11 +49,14 @@ fn main() {
         ..Default::default()
     });
 
-    // let create_stack_manager = CreateStack {
-    //     client: (),
-    //     stack_name: "".to_string(),
-    //     template_body: "".to_string(),
-    // };
+    let config = aws_config::load_from_env().await;
+    let client = cloudformation::Client::new(&config);
+
+    let create_stack = CreateStack {
+        client,
+        stack_name: "stack".to_string(),
+        template_body: "".to_string(),
+    };
 
 
     let sentry_logger = SentryLogger {};
@@ -45,22 +73,7 @@ fn main() {
         .manage(file_logger.clone())
         .plugin(tauri_plugin_store::Builder::default().build())
         .setup(move |_app| {
-
-            // let path = app.path_resolver().app_data_dir().unwrap();
-            // let path = path.join(".config").join(".env");
-            // let path = path.to_str().unwrap();
-            // env_mod::run_bootstrap(path, app, &file_logger);
-            //
-            // let app_dir = app.path_resolver().app_data_dir().unwrap();
-            // let app_dir = app_dir.to_str().unwrap();
-            // let blender_path = format!("{}/.config/.blender", &app_dir);
-            // let deps_path = format!("{}/.brh-ext-deps", app_dir);
-            // os_fn::create_blender_folder(&blender_path, &file_logger);
-            // os_fn::create_blender_folder(&deps_path, &file_logger);
-            // os_fn::clone_git_project(&deps_path);
-            // os_fn::init_job_list(app, &file_logger);
             Ok(())
-
         })
         .menu(Menu::with_items([
             MenuEntry::Submenu(Submenu::new(
@@ -102,6 +115,8 @@ fn main() {
             env_mod::check_aws_auth_file,
             env_mod::write_aws_auth_to_file,
             env_mod::get_aws_credentials,
+            stack_file_repo::has_stack_file_repo,
+            stack_file_repo::create_stack_file_repo,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

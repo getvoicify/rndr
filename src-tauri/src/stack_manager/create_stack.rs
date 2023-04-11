@@ -16,4 +16,12 @@ impl CreateStack {
             .await?;
         Ok(())
     }
+
+    pub fn build(self) -> CreateStack {
+        CreateStack {
+            client: self.client,
+            stack_name: self.stack_name,
+            template_body: self.template_body
+        }
+    }
 }

@@ -1,6 +1,6 @@
 import { Store as TauriStore } from "tauri-plugin-store-api";
 import { defer, map, Observable } from 'rxjs';
-import { AsyncStorageEngine } from '@ngxs-labs/async-storage-plugin';
+import { AsyncStorageEngine } from './async-store/symbols';
 
 export class TauriAsyncStorageEngine implements AsyncStorageEngine {
 

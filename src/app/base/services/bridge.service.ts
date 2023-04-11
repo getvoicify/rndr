@@ -143,6 +143,9 @@ export class BridgeService implements OnDestroy {
   }
 
   startInstallation(): Observable<boolean> {
-    return defer(() => invoke<boolean>('start_installation'));
+    return defer(() => invoke<string>('create_stack_file_repo')).pipe(
+      map(() => true),
+      catchError(e => of(false))
+    );
   }
 }
