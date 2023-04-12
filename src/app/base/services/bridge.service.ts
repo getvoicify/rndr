@@ -1,6 +1,6 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { invoke } from '@tauri-apps/api/tauri';
-import { catchError, defer, from, map, Observable, of, Subject, takeUntil, tap } from 'rxjs';
+import { catchError, concat, defer, from, map, Observable, of, Subject, takeUntil, toArray } from 'rxjs';
 import { appDataDir } from '@tauri-apps/api/path';
 import { BaseDirectory, exists } from '@tauri-apps/api/fs';
 import { envFileName } from '../../app-constants';
@@ -142,7 +142,24 @@ export class BridgeService implements OnDestroy {
     await invoke('open_url', {url});
   }
 
+  private readonly cloneRepo = defer(() => invoke<string>('create_stack_file_repo')).pipe(
+    map(() => true),
+    catchError(e => of(false))
+  );
+
+  private readonly createStack = defer(() => invoke('create_aws_stack')).pipe(
+    map(() => true),
+    catchError(e => of(false))
+  )
+
   startInstallation(): Observable<boolean> {
-    return defer(() => invoke<boolean>('start_installation'));
+    const installations = [
+      this.cloneRepo,
+      this.createStack
+    ];
+    return concat(...installations).pipe(
+      toArray(),
+      map((results) => results.every(result => result))
+    );
   }
 }

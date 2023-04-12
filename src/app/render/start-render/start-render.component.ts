@@ -127,7 +127,7 @@ export class StartRenderComponent extends ReactiveComponent {
       this.renderService.createRender(this.state.file ?? '', config);
     }
     this.configFormGroup.reset();
-    this.router.navigate(['/jobs']).catch(console.error);
+    this.router.navigate(['/job']).catch(console.error);
   }
 
   removeFile() {

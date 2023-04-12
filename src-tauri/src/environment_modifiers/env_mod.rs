@@ -1,7 +1,7 @@
 use std::{env, fs};
 use std::collections::HashMap;
 use std::fs::{File, OpenOptions};
-use std::io::{self, prelude::*, BufRead, BufReader, BufWriter, Write};
+use std::io::{self, BufRead, BufReader, BufWriter, Write};
 use std::path::PathBuf;
 
 use tauri::State;
@@ -9,6 +9,7 @@ use tauri::api::path::home_dir;
 
 use crate::utils::file_logger::FileLogger;
 use crate::utils::logger::Logger;
+use crate::utils::read_file_to_text_string::read_file_to_string;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct AwsCredentials {
@@ -243,13 +244,6 @@ fn append_credentials(aws_access_key_id: &str, aws_secret_access_key: &str, regi
         logger.log("ERROR - [RUST]: An error occurred while writing credentials to file");
         e.to_string()
     })
-}
-
-fn read_file_to_string(file_path: &str) -> io::Result<String> {
-    let mut file = File::open(file_path)?;
-    let mut contents = String::new();
-    file.read_to_string(&mut contents)?;
-    Ok(contents)
 }
 
 fn write_credentials_to_file(credentials: &HashMap<String, AwsCredentials>, path: &PathBuf) -> Result<(), io::Error> {

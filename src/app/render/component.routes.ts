@@ -1,6 +1,6 @@
 import { Route, RouterModule, Routes } from '@angular/router';
 import { NgModule } from '@angular/core';
-import { hasStacksGuard } from '../has-deps.guard';
+import { hasStackListGuard, hasStacksRepoGuard } from '../has-deps.guard';
 
 const resetRoute: Route = {
   path: '**',
@@ -10,7 +10,7 @@ export const routes: Routes = [
   {
     path: '',
     loadComponent: () => import('./render-shell/render-shell.component').then(m => m.RenderShellComponent),
-    canActivate: [hasStacksGuard],
+    canActivate: [hasStacksRepoGuard, hasStackListGuard],
     children: [
       {
         path: '',
