@@ -21,6 +21,13 @@ pub fn has_stack_file_repo(handle: AppHandle<Wry>, logger: State<FileLogger>) ->
 #[tauri::command]
 pub async fn create_stack_file_repo(handle: AppHandle<Wry>, logger: State<'_, FileLogger>) -> Result<String, String> {
     logger.log("[RUST]: Cloning stack repo");
+    let has_stack_repo = handle.path_resolver().app_data_dir().unwrap().join(".config").join(".dep_repo").exists();
+
+    if has_stack_repo {
+        logger.log("[RUST]: Stack repo already exists");
+        return Ok("Stack repo already exists".to_string());
+    }
+
     let url = "https://github.com/petetaxi-test/AwsBatchBlender";
     let path = handle.path_resolver().app_data_dir().unwrap();
     let path = path.join(".config").join(".dep_repo");

@@ -11,9 +11,7 @@ use blender_batch_render_helper::utils::logger::Logger;
 use blender_batch_render_helper::utils::sentry_logger::SentryLogger;
 use clap::Parser;
 use aws_sdk_cloudformation as cloudformation;
-use blender_batch_render_helper::env_mod;
-use blender_batch_render_helper::stack_file_repo;
-use blender_batch_render_helper::create_stack::CreateStack;
+use blender_batch_render_helper::{env_mod, stack_file_repo, list_stacks, create_stack};
 
 #[derive(Debug, Parser)]
 struct Opt {
@@ -52,12 +50,6 @@ async fn main() {
     let config = aws_config::load_from_env().await;
     let client = cloudformation::Client::new(&config);
 
-    let create_stack = CreateStack {
-        client,
-        stack_name: "stack".to_string(),
-        template_body: "".to_string(),
-    };
-
 
     let sentry_logger = SentryLogger {};
     let mut file_logger: FileLogger = FileLogger {
@@ -70,6 +62,7 @@ async fn main() {
 
     tauri::Builder::default()
         .manage(sentry_logger)
+        .manage(client)
         .manage(file_logger.clone())
         .plugin(tauri_plugin_store::Builder::default().build())
         .setup(move |_app| {
@@ -86,8 +79,12 @@ async fn main() {
             )),
         ]))
         .on_window_event(|e| match e.event() {
-            WindowEvent::Resized(_) => {}
-            WindowEvent::Moved(_) => {}
+            WindowEvent::Resized(size) => {
+                e.window().emit("resized", size).unwrap();
+            }
+            WindowEvent::Moved(pos) => {
+                e.window().emit("moved", pos).unwrap();
+            }
             WindowEvent::CloseRequested { .. } => {}
             WindowEvent::Destroyed => {}
             WindowEvent::Focused(focused) => {
@@ -117,6 +114,8 @@ async fn main() {
             env_mod::get_aws_credentials,
             stack_file_repo::has_stack_file_repo,
             stack_file_repo::create_stack_file_repo,
+            list_stacks::get_stack_list,
+            create_stack::create_aws_stack,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

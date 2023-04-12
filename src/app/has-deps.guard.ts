@@ -38,6 +38,14 @@ export const hasAwsEnvGuard = () => {
 export const hasStacksRepoGuard = () => {
   const router = inject(Router);
   const stackService = inject(StackService);
+  return stackService.hasStacksRepo$.pipe(
+    map(hasStacks => hasStacks ? true : router.parseUrl('/missing-deps'))
+  );
+};
+
+export const hasStackListGuard = () => {
+  const router = inject(Router);
+  const stackService = inject(StackService);
   return stackService.hasStacks$.pipe(
     map(hasStacks => hasStacks ? true : router.parseUrl('/missing-deps'))
   );

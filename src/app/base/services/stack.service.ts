@@ -3,8 +3,8 @@ import { invoke } from '@tauri-apps/api';
 import {
   asyncScheduler,
   catchError,
-  defer,
-  merge,
+  defer, map,
+  merge, Observable,
   observeOn,
   of,
   retry,
@@ -26,9 +26,17 @@ import { coreEvent$ } from '../../core/install-event.logger';
 })
 export class StackService {
 
-  hasStacks$ = defer(() => invoke<boolean>('has_stack_file_repo')).pipe(
+  hasStacksRepo$ = defer(() => invoke<boolean>('has_stack_file_repo')).pipe(
     catchError(e => of(false))
   );
+
+
+  hasStacks$: Observable<boolean> = defer(() => invoke<string[]>('get_stack_list')).pipe(
+    tap(stacks => console.log(stacks)),
+    catchError(e => of([])),
+    map(stacks => stacks.length > 0)
+  );
+
   private readonly stackEventSub$: Subject<Event<CreateStackResultModel>> = new Subject<Event<CreateStackResultModel>>();
   stackEvent$ = coreEvent$<any>('create-stack').pipe(
     observeOn(asyncScheduler),

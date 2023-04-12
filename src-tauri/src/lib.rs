@@ -12,3 +12,4 @@ pub use render::process;
 pub use installers::installer;
 pub use stack_manager::create_stack;
 pub use stack_manager::stack_file_repo;
+pub use stack_manager::list_stacks;
