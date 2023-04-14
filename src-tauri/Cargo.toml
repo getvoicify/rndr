@@ -28,6 +28,7 @@ aws-sdk-cloudformation = "0.24.0"
 tokio = { version = "1", features = ["full"] }
 git2 = "0.17.0"
 anyhow = "1.0.70"
+aws-sdk-s3 = "0.26.0"
 [dependencies.clap]
 version = "4.2.1"
 features = ["derive"]
