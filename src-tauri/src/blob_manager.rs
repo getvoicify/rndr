@@ -26,7 +26,7 @@ impl Loggable for BlobManager {
 }
 
 impl BlobManager {
-    async fn upload(&self, path: &str, bucket: &str) -> Result<String, String> {
+    pub async fn upload(&self, path: &str, bucket: &str) -> Result<String, String> {
         self.log(&*format!("[Rust]: Uploading {} to S3", path));
         if let Some(s3_client) = &self.s3_client {
             let file_path = Path::new(path);
