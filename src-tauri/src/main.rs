@@ -11,7 +11,9 @@ use blender_batch_render_helper::utils::logger::Logger;
 use blender_batch_render_helper::utils::sentry_logger::SentryLogger;
 use clap::Parser;
 use aws_sdk_cloudformation as cloudformation;
+use aws_sdk_s3 as s3;
 use blender_batch_render_helper::{env_mod, stack_file_repo, list_stacks, create_stack};
+use blender_batch_render_helper::blob_manager::BlobManager;
 
 #[derive(Debug, Parser)]
 struct Opt {
@@ -49,6 +51,7 @@ async fn main() {
 
     let config = aws_config::load_from_env().await;
     let client = cloudformation::Client::new(&config);
+    let s3_client = s3::Client::new(&config);
 
 
     let sentry_logger = SentryLogger {};
@@ -60,9 +63,18 @@ async fn main() {
 
     file_logger.log("[RUST]: Starting app");
 
+    let blob_manager = BlobManager{
+        s3_client: Some(s3_client.clone()),
+        file_logger: Some(file_logger.clone()),
+        render_path: None,
+        work_dir: None,
+    };
+
     tauri::Builder::default()
         .manage(sentry_logger)
         .manage(client)
+        .manage(s3_client)
+        .manage(blob_manager)
         .manage(file_logger.clone())
         .plugin(tauri_plugin_store::Builder::default().build())
         .setup(move |_app| {

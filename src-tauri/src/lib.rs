@@ -3,6 +3,7 @@ pub mod render;
 pub mod utils;
 pub mod installers;
 pub mod stack_manager;
+pub mod blob_manager;
 
 pub use environment_modifiers::env_mod;
 pub use render::aws;
