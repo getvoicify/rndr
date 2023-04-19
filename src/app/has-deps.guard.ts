@@ -49,4 +49,12 @@ export const hasStackListGuard = () => {
   return stackService.hasStacks$.pipe(
     map(hasStacks => hasStacks ? true : router.parseUrl('/missing-deps'))
   );
+};
+
+export const isAwsCredentialValidGuard = () => {
+  const router = inject(Router);
+  const bridgeService = inject(BridgeService);
+  return bridgeService.isAwsCredentialValid$.pipe(
+    map(isValid => isValid ? true : router.parseUrl('/missing-vars'))
+  );
 }

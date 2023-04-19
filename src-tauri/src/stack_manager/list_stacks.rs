@@ -1,5 +1,7 @@
 use aws_sdk_cloudformation::{Client, Error};
-use tauri::State;
+use crate::utils::aws_client_factory::{AwsClientFactory, AwsClientType};
+use crate::utils::error::RNDRError;
+use crate::utils::error::RNDRError::GenericError;
 
 async fn _list_stacks(client: &Client) -> Result<Vec<String>, Error> {
     let stacks = client.list_stacks().send().await?;
@@ -23,9 +25,18 @@ async fn _list_stacks(client: &Client) -> Result<Vec<String>, Error> {
 }
 
 #[tauri::command]
-pub async fn get_stack_list(client: State<'_, Client>) -> Result<Vec<String>, String> {
-    let _client = client.inner();
-    let stacks = _list_stacks(_client).await;
+pub async fn get_stack_list() -> Result<Vec<String>, RNDRError> {
+    let factory = AwsClientFactory::new("rndr").await;
+    let _client = factory.get_client("cloudformation");
+
+    let _client = match _client {
+        None => return Err(GenericError(String::from("Could not get CloudFormation client"))),
+        Some(c) => match c {
+            AwsClientType::CloudFormation(cf) => cf,
+            _ => return Err(GenericError(String::from("Could not get CloudFormation client")))
+        }
+    };
+    let stacks = _list_stacks(&_client).await;
 
     match stacks {
         Ok(stacks) => {
@@ -33,7 +44,7 @@ pub async fn get_stack_list(client: State<'_, Client>) -> Result<Vec<String>, St
         },
         Err(err) => {
             println!("Error: {}", err);
-            Err("Error".to_string())
+            Err(GenericError("Error".to_string()))
         }
     }
 }

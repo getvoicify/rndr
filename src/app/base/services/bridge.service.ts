@@ -19,6 +19,10 @@ export class BridgeService implements OnDestroy {
   events$ = this.eventSubject$.asObservable();
   private readonly destroy$ = new Subject<void>();
 
+
+
+  readonly isAwsCredentialValid$ = defer(() => invoke<boolean>('validate'));
+
   readonly hasAllDependencies$: Observable<boolean> = defer(() => invoke<boolean>('check_aws_auth_file'));
 
   readonly getAwsCreds$ = defer(() => invoke<AwsCredentialsResponse>('get_aws_credentials')).pipe(
@@ -150,7 +154,7 @@ export class BridgeService implements OnDestroy {
   private readonly createStack = defer(() => invoke('create_aws_stack')).pipe(
     map(() => true),
     catchError(e => of(false))
-  )
+  );
 
   startInstallation(): Observable<boolean> {
     const installations = [

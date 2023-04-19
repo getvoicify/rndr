@@ -6,6 +6,7 @@ pub mod stack_manager;
 pub mod blob_manager;
 
 pub use environment_modifiers::env_mod;
+pub use environment_modifiers::validate_aws_credentials;
 pub use render::aws;
 pub use render::jobs;
 pub use render::os_fn;

@@ -1,19 +1,36 @@
 use std::path::PathBuf;
 use std::thread::sleep;
-use aws_sdk_cloudformation::{Client as CFClient};
+
+use aws_sdk_cloudformation::Client as CFClient;
+use aws_sdk_cloudformation::error::CreateStackErrorKind;
 use aws_sdk_cloudformation::model::Capability::CapabilityIam;
 use aws_sdk_cloudformation::model::StackStatus::CreateComplete;
 use aws_sdk_cloudformation::output::CreateStackOutput;
+use aws_smithy_http::result::SdkError;
 use tauri::{AppHandle, State, Wry};
+
 use crate::stack_manager::describe_stack::get_stack;
+use crate::utils::aws_client_factory::{AwsClientFactory, AwsClientType};
+use crate::utils::error::RNDRError;
+use crate::utils::error::RNDRError::{Duplicate, GenericError, IOError, MissingParam};
 use crate::utils::file_logger::FileLogger;
 use crate::utils::logger::Logger;
 use crate::utils::read_file_to_text_string::read_file_to_string;
 
 #[tauri::command]
-pub async fn create_aws_stack(_client: State<'_, CFClient>, _logger: State<'_, FileLogger>, handle: AppHandle<Wry>) -> Result<String, String> {
+pub async fn create_aws_stack(_logger: State<'_, FileLogger>, handle: AppHandle<Wry>) -> Result<String, RNDRError> {
     let logger = _logger.inner();
-    let client = _client.inner();
+    let factory = AwsClientFactory::new("rndr").await;
+    let client = factory.get_client("cloudformation");
+
+    let client = match client {
+        None => return Err(GenericError(String::from("Could not get CloudFormation client"))),
+        Some(c) => match c {
+            AwsClientType::CloudFormation(cf) => cf,
+            _ => return Err(GenericError(String::from("Could not get CloudFormation client")))
+        }
+    };
+
     let _stack_name = "rndr-stack";
     let path_to_stack_file = handle.path_resolver().app_data_dir();
     if let Some(path_buf) = path_to_stack_file {
@@ -21,7 +38,7 @@ pub async fn create_aws_stack(_client: State<'_, CFClient>, _logger: State<'_, F
 
         if !path.exists() {
             logger.log("[RUST]: Could not find path to stack file");
-            return Err("Could not find path to stack file".to_string());
+            return Err(IOError(String::from("Could not find path to stack file")));
         }
 
         logger.log(&format!("[RUST]: Path to stack file: {}", path.to_str().unwrap()));
@@ -53,11 +70,11 @@ pub async fn create_aws_stack(_client: State<'_, CFClient>, _logger: State<'_, F
         }
     } else {
         logger.log("[RUST]: Could not find path to stack file");
-        Err("Could not find path to stack file".to_string())
+        Err(IOError(String::from("Could not find path to stack file")))
     }
 }
 
-async fn _create_stack(client: &CFClient, logger: &FileLogger, stack_name: &str, path: PathBuf) -> Result<CreateStackOutput, String> {
+async fn _create_stack(client: &CFClient, logger: &FileLogger, stack_name: &str, path: PathBuf) -> Result<CreateStackOutput, RNDRError> {
     logger.log(&*format!("[RUST]: Creating stack - {}", stack_name));
 
     let path_string = path.to_str().unwrap_or_default();
@@ -65,7 +82,7 @@ async fn _create_stack(client: &CFClient, logger: &FileLogger, stack_name: &str,
         Ok(template) => template,
         Err(err) => {
             logger.log(&format!("[RUST]: Error reading stack file: {}", err));
-            return Err("Error reading stack file".to_string());
+            return Err(IOError(String::from("Error reading stack file")));
         }
     };
 
@@ -82,7 +99,17 @@ async fn _create_stack(client: &CFClient, logger: &FileLogger, stack_name: &str,
             Ok(o)
         }
         Err(err) => {
-            Err(err.to_string())
+            match err {
+                SdkError::ServiceError(service_err) => match service_err.into_err().kind {
+                    CreateStackErrorKind::AlreadyExistsException(_) => Err(Duplicate),
+                    CreateStackErrorKind::InsufficientCapabilitiesException(_) => Err(MissingParam(String::from("Capability not defined"))),
+                    CreateStackErrorKind::LimitExceededException(_) => Err(GenericError(String::from("API limit exceeded"))),
+                    _err => {
+                        Err(GenericError(String::from("An unknown error has occurred")))
+                    }
+                }
+                _ => Err(GenericError(err.to_string()))
+            }
         }
     }
 }

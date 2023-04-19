@@ -26,6 +26,7 @@ aws-config = "0.54.1"
 aws-sdk-batch = "0.24.0"
 aws-sdk-cloudformation = "0.24.0"
 aws-sdk-s3 = "0.24.0"
+aws-sdk-sts = "0.24.0"
 tokio = { version = "1", features = ["full"] }
 git2 = "0.17.0"
 anyhow = "1.0.70"
