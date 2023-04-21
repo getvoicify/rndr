@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { hasAwsEnvGuard, hasDepsGuard, hasExtDepsGuard } from './has-deps.guard';
+import { isAwsCredentialValidGuard, hasDepsGuard, hasExtDepsGuard } from './has-deps.guard';
 
 export const appRoutes: Routes = [
 
@@ -18,7 +18,7 @@ export const appRoutes: Routes = [
   {
     path: '',
     loadComponent: () => import('./home/home.component').then((m) => m.HomeComponent),
-    canActivate: [hasDepsGuard, hasExtDepsGuard],
+    canActivate: [hasDepsGuard, isAwsCredentialValidGuard, hasExtDepsGuard],
     children: [
       {
         path: 'jobs',

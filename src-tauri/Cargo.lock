@@ -616,6 +616,7 @@ dependencies = [
  "aws-sdk-batch",
  "aws-sdk-cloudformation",
  "aws-sdk-s3",
+ "aws-sdk-sts",
  "aws-smithy-http",
  "aws-smithy-types",
  "chrono",

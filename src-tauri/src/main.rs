@@ -12,7 +12,9 @@ use blender_batch_render_helper::utils::sentry_logger::SentryLogger;
 use clap::Parser;
 use aws_sdk_cloudformation as cloudformation;
 use aws_sdk_s3 as s3;
-use blender_batch_render_helper::{env_mod, stack_file_repo, list_stacks, create_stack};
+use aws_config::profile::ProfileFileCredentialsProvider;
+use aws_config::provider_config::ProviderConfig;
+use blender_batch_render_helper::{env_mod, stack_file_repo, list_stacks, create_stack, validate_aws_credentials};
 use blender_batch_render_helper::blob_manager::BlobManager;
 
 #[derive(Debug, Parser)]
@@ -49,7 +51,13 @@ async fn main() {
         ..Default::default()
     });
 
-    let config = aws_config::load_from_env().await;
+    let provider = ProfileFileCredentialsProvider::builder()
+        .profile_name("rndr")
+        .configure(&ProviderConfig::with_default_region().await)
+        .build();
+
+
+    let config = aws_config::from_env().credentials_provider(provider).load().await;
     let client = cloudformation::Client::new(&config);
     let s3_client = s3::Client::new(&config);
 
@@ -128,6 +136,7 @@ async fn main() {
             stack_file_repo::create_stack_file_repo,
             list_stacks::get_stack_list,
             create_stack::create_aws_stack,
+            validate_aws_credentials::validate
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

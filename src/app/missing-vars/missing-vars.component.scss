@@ -3,3 +3,13 @@ input, select {
   color: rgba(255, 255, 255, 0.4);
   background-color: black !important;
 }
+
+form.is-invalid {
+  input, select, button {
+    @apply border-[#FF0000];
+
+    &:focus {
+      @apply border-[#FF0000];
+    }
+  }
+}
