@@ -13,6 +13,15 @@ pub struct AwsCredentials {
     pub region: Option<String>,
 }
 
+pub fn get_aws_credential_by_profile(profile: &str, map: HashMap<String, AwsCredentials>) -> Option<AwsCredentials> {
+    for (key, value) in map {
+        if key == profile {
+            return Some(value);
+        }
+    }
+    None
+}
+
 pub fn parse_credentials(contents: &str) -> HashMap<String, AwsCredentials> {
     let mut aws_credentials: HashMap<String, AwsCredentials> = HashMap::new();
     let mut current_profile: Option<String> = None;

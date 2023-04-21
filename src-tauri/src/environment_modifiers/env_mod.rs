@@ -6,7 +6,7 @@ use std::path::PathBuf;
 
 use tauri::State;
 use tauri::api::path::home_dir;
-use crate::utils::aws_credentials::{AwsCredentials, parse_credentials, write_credentials_to_file, write_hash_to_file};
+use crate::utils::aws_credentials::{AwsCredentials, parse_credentials, write_credentials_to_file, write_hash_to_file, get_aws_credential_by_profile};
 
 use crate::utils::file_logger::FileLogger;
 use crate::utils::logger::Logger;
@@ -53,42 +53,12 @@ pub fn get_aws_credentials(logger: State<FileLogger>) -> Result<AwsCredentials, 
         }
         Some(path) => {
             let auth_path = path.join(".aws").join("credentials");
-            return match auth_path.exists() {
-                true => {
-                    let file = match File::open(auth_path) {
-                        Ok(file) => file,
-                        Err(_) => {
-                            logger.log("[RUST]: AWS credentials file not found");
-                            return Err("[RUST]: AWS credentials file not found".to_string());
-                        }
-                    };
-                    let mut aws_access_key_id: Option<String> = None;
-                    let mut aws_secret_access_key: Option<String> = None;
-                    let mut region: Option<String> = None;
-                    for line in BufReader::new(file).lines() {
-                        let line = line.unwrap_or_default();
-                        if line.is_empty() || line.contains("[default]") {
-                            continue;
-                        }
-                        let mut split = line.splitn(2, '=');
-                        let key = split.next().unwrap_or_default().trim();
-                        let value = split.next().unwrap_or_default().trim();
-                        match key {
-                            "aws_access_key_id" => aws_access_key_id = Some(value.to_string()),
-                            "aws_secret_access_key" => aws_secret_access_key = Some(value.to_string()),
-                            "region" => region = Some(value.to_string()),
-                            _ => {}
-                        }
-                    }
-                    Ok(AwsCredentials {
-                        aws_access_key_id,
-                        aws_secret_access_key,
-                        region,
-                    })
-                }
-                false => {
-                    Err("[RUST]: ASW credentials not found".to_string())
-                }
+            let auth_file_path = auth_path.to_str().unwrap_or_default();
+            let contents = parse_credential_from_file(logger.inner(), auth_file_path)?;
+            return if let Some(credentials) = get_aws_credential_by_profile("rndr", parse_credentials(&contents)) {
+                Ok(credentials)
+            } else {
+                Err("[RUST]: AWS credentials not found".to_string())
             }
         }
     }
@@ -104,19 +74,8 @@ pub fn check_aws_auth_file(logger: State<FileLogger>) -> Result<bool, String> {
         Some(path) => {
             let auth_path = path.join(".aws").join("credentials");
             let auth_file_path = auth_path.to_str().unwrap_or_default();
-
             let contents = parse_credential_from_file(logger.inner(), auth_file_path)?;
-
-            let aws_credentials = parse_credentials(&contents);
-            let mut credentials: Option<AwsCredentials> = None;
-            for (key, value) in aws_credentials {
-                if key == "rndr" {
-                    credentials = Some(value);
-                    break;
-                }
-            }
-
-            return if let Some(_) = credentials {
+            return if let Some(_) = get_aws_credential_by_profile("rndr", parse_credentials(&contents)) {
                 Ok(true)
             } else {
                 Ok(false)

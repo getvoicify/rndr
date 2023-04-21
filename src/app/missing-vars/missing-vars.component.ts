@@ -3,7 +3,21 @@ import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BridgeService } from '../base/services';
 import { AWSEnvForm } from '../models';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import {
+  BehaviorSubject,
+  catchError,
+  combineLatest,
+  defer,
+  finalize,
+  map,
+  of,
+  startWith,
+  Subject,
+  switchMap,
+  tap
+} from 'rxjs';
+import { ReactiveComponent } from '../base/reactive.component';
 
 @Component({
   selector: 'app-missing-vars',
@@ -13,7 +27,7 @@ import { Router } from '@angular/router';
   styleUrls: ['./missing-vars.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MissingVarsComponent implements OnInit{
+export class MissingVarsComponent extends ReactiveComponent implements OnInit {
 
   private reg = [
     {name: 'US East (Ohio) w GPU', code: 'us-east-2'},
@@ -48,9 +62,42 @@ export class MissingVarsComponent implements OnInit{
     return 'grid w-full h-full place-content-center';
   }
 
-  constructor(private bridgeService: BridgeService, private router: Router) { }
+  isCredentialsInvalid$ = this.activatedRoute.queryParams.pipe(
+    map(params => params['invalid'] === 'true')
+  );
+  private readonly isLoadingSub = new BehaviorSubject(false);
+  private readonly submitAwsCredentialSub = new Subject<void>();
 
-  ngOnInit(): void {
+  private readonly onSubmitAwsCredential = this.submitAwsCredentialSub.pipe(
+    tap(() => this.isLoadingSub.next(true)),
+    switchMap(() => defer(() => this.setAwsEnv())),
+    tap(() => this.isLoadingSub.next(false)),
+  );
+
+  readonly loading$ = combineLatest([
+    this.isLoadingSub.asObservable(),
+    this.onSubmitAwsCredential.pipe(
+      catchError(() => of(false)),
+    )
+  ]).pipe(
+    map(([isLoading, isSubmitting]) => isLoading || !!isSubmitting),
+  );
+
+  state = this.connect({
+    isCredentialsInvalid: this.isCredentialsInvalid$,
+    loading: this.loading$,
+  });
+
+  constructor(
+    private bridgeService: BridgeService,
+    private router: Router,
+    private activatedRoute: ActivatedRoute
+  ) {
+    super();
+  }
+
+  override ngOnInit(): void {
+    super.ngOnInit();
     this.bridgeService.getAwsCreds$.subscribe(creds => {
       for (const k in creds) {
         const key = k as keyof AWSEnvForm;
@@ -80,5 +127,9 @@ export class MissingVarsComponent implements OnInit{
     }
 
     await this.router.navigate(['/']);
+  }
+
+  submit() {
+    this.submitAwsCredentialSub.next();
   }
 }

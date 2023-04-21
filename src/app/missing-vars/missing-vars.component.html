@@ -1,10 +1,12 @@
 <h1 class="text-2xl mb-8">Please provide your AWS credentials</h1>
 
-<form [formGroup]="awsFormGroup" class="flex flex-col gap-2">
+<form [ngClass]="{'is-invalid': isCredentialsInvalid$ | async}" [formGroup]="awsFormGroup" class="flex flex-col gap-2">
   <input placeholder="Access key" type="text" formControlName="awsAccessKeyId">
   <input placeholder="Secret key" type="text" formControlName="awsSecretAccessKey">
   <select name="awsRegions" id="awsRegions" formControlName="region">
     <option *ngFor="let region of awsRegions" [value]="region">{{region}}</option>
   </select>
-  <button (click)="setAwsEnv()" type="submit" class="mb-8 mt-4 p-2 uppercase rounded-md border border-slate-200 hover:border-blue-400 hover:text-blue-400 transition-colors">Set Credentials</button>
+  <button (click)="submit()" type="submit" [disabled]="state.loading" class="mb-8 mt-4 p-2 uppercase rounded-md border border-slate-200 hover:border-blue-400 hover:text-blue-400 transition-colors">
+      {{ state.loading ? 'Loading...' : 'Set Credentials' }}
+  </button>
 </form>

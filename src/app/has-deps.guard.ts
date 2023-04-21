@@ -1,7 +1,7 @@
 import { Router } from '@angular/router';
 import { inject } from '@angular/core';
 import { BridgeService, StackService } from './base/services';
-import { combineLatest, map } from 'rxjs';
+import { catchError, combineLatest, map, of } from 'rxjs';
 import { AWSCredentialFormValue } from './models';
 
 export const hasDepsGuard = () => {
@@ -55,6 +55,15 @@ export const isAwsCredentialValidGuard = () => {
   const router = inject(Router);
   const bridgeService = inject(BridgeService);
   return bridgeService.isAwsCredentialValid$.pipe(
-    map(isValid => isValid ? true : router.parseUrl('/missing-vars'))
+    map(isValid => isValid ? true : router.parseUrl('/missing-vars?invalid=true')),
+    catchError((err) => {
+      console.error(err);
+
+      if ('GenericError' in err) {
+        return of(router.parseUrl('/missing-vars?invalid=true'));
+      }
+
+      return of(false);
+    })
   );
 }
